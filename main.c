@@ -5,14 +5,14 @@
 
 #include "bmp.h"
 
-#define min(x, y) (((x) < (y)) ? (x) : (y))
+#define min(x, y) (((x) < (y)) ? (x) : (y)) // плохое решение, только для быстрой реализации матрицы
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 
 enum {
     COPY, FLIP_H, FLIP_V, FLIP_BOTH,
     RED, GREEN, BLUE, NEG, YELLOW, CYAN, MAGENTA, GS,
     SHARP,
-};
+}; // тоже, вероятно, не пригодится. Нужны отдельные структуры для аргумента вызова и для фильтра
 
 void console_img (img*);
 void filter (img*, img*, int);
@@ -26,12 +26,12 @@ int main(){
         fprintf(stderr, "Failed to parse %s file!\n", path);
         return 1;
     }
-    // console_img(source);
+    // console_img(source); // очень объемный вывод в консоль
 
     img *target = img_init(source->width, source->height);
     
-    filter(source, target, FLIP_BOTH);
-    print(target, "./img/01-flipped.bmp");
+    filter(source, target, FLIP_BOTH); // При этом мы изменили target bitmap, но этого недостаточно для "накладывания" фильтров один на другой
+    print(target, "./img/01-flipped.bmp");  
 
     filter(source, target, GREEN);
     print(target, "./img/02-green.bmp");
@@ -50,7 +50,7 @@ int main(){
     return 0;
 }
 
-void console_img (img *image){
+void console_img (img *image){ // требовалось для проверки парсера, пока не было вывода. Не нужно(?) но пусть пока останется
     char gradient[16] = " .,_-=+*nm%#&BW@";   
     
     for (int y = 0; y < image->height; y += 4){
@@ -64,7 +64,7 @@ void console_img (img *image){
     }
 }
 
-void filter(img* source, img* target, int mode){
+void filter(img* source, img* target, int mode){ // очевидно, ужасно много повторений. Просто как пример, ну и какие-то штуки можно скопипастить
     int w = source->width;
     int h = source->height;
 

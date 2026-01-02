@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#pragma pack(push, 1)
+#pragma pack(push, 1) // отключение padding-а структур, так как BMP и DIB header-ы имеют разный размер
 
 typedef struct {
     char id[2];
@@ -29,7 +29,7 @@ typedef struct {
     DIB_Header dib;
 } File_Header;
 
-#pragma pack(pop)
+#pragma pack(pop) // возвращаем как было (там стек)
 
 typedef struct {
     unsigned char r;
@@ -41,7 +41,7 @@ typedef struct {
     unsigned int width;
     unsigned int height;
     pixel **bitmap;
-} img;
+} img; // Вопрос: достаточно ли такой структуры? Лучше сразу исправить, если нужна какая-то еще инфа про картинку
 
 img* img_init(unsigned int, unsigned int);
 void img_destroy(img*);
