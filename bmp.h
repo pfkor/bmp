@@ -1,22 +1,26 @@
+#ifndef BMP_H
+#define BMP_H
+
 #include <stdint.h>
+#include "color.h"
 
 #pragma pack(push, 1) // отключение padding-а структур, так как BMP и DIB header-ы имеют разный размер
 
 typedef struct {
-    char id[2];
-    uint32_t size_of_file;
-    uint16_t unused_1;
-    uint16_t unused_2;
+    uint16_t id;
+    uint32_t size;
+    uint16_t reserved1;
+    uint16_t reserved2;
     uint32_t offset;
 } BMP_Header;
 
 typedef struct {
-    uint32_t dib_bytes;
+    uint32_t size;
     int32_t  width;
     int32_t  height;
     uint16_t planes;
     uint16_t bits;
-    uint32_t bi_rgb;
+    uint32_t compression;
     uint32_t raw_bitmap;
     int32_t  resolution_h;
     int32_t  resolution_v;
@@ -27,24 +31,23 @@ typedef struct {
 typedef struct {
     BMP_Header bmp;
     DIB_Header dib;
-} File_Header;
+} Header;
 
 #pragma pack(pop) // возвращаем как было (там стек)
 
 typedef struct {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-} pixel;
-
-typedef struct {
     unsigned int width;
     unsigned int height;
-    pixel **bitmap;
-} img; // Вопрос: достаточно ли такой структуры? Лучше сразу исправить, если нужна какая-то еще инфа про картинку
+    Color **data;
+} Image;
 
-img* img_init(unsigned int, unsigned int);
-void img_destroy(img*);
+Image* create_image(unsigned int width, unsigned int height);
+void destroy_image(Image *image);
 
-img* parse (char *);
-void print (img *, char *);
+Image* load_bmp(const char *filepath);
+void save_bmp(const char *filepath, Image *image);
+
+Color get_color(Image *image, int x, int y);
+void set_color(Image *image, int x, int y, Color color);
+
+#endif

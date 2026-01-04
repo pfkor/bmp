@@ -3,30 +3,25 @@
 
 #include "bmp.h"
 
-// Вроде все чисто. Обычные: конструктор, деструктор, ввод и вывод
-// Обрабатываются только основные ошибки. Да и вообще, лучше написать макрос или структуру для вывода ошибок (соответственно void поменять)
-
-img* img_init(unsigned int w, unsigned int h){
-    img *image = malloc(sizeof(img));
+Image* create_image(unsigned int width, unsigned int height){
+    Image* image= malloc(sizeof(Image));
     if (!image) return NULL;
 
-    image->width = w;
-    image->height = h;
+    image->width = width;
+    image->height = height;
 
-    image->bitmap = malloc(sizeof(pixel*) * h);
-    if (!image->bitmap){
+    image->data = malloc(sizeof(Color*) * height);
+    if (!image->data){
         free(image);
         return NULL;
     }
-
-    for (int i = 0; i < h; i++){
-        image->bitmap[i] = malloc(sizeof(pixel) * w);
-        
-        if (!image->bitmap[i]){
+    for (int i = 0; i < height; i++){
+        image->data[i] = malloc(sizeof(Color) * width);
+        if (!image->data[i]){
             for (int j = 0; j < i; j++){
-                free(image->bitmap[j]);
+                free(image->data[j]); // free prev rows
             }
-            free(image->bitmap);
+            free(image->data);
             free(image);
             return NULL;
         }
@@ -34,19 +29,20 @@ img* img_init(unsigned int w, unsigned int h){
     return image;
 }
 
-void img_destroy(img* image){
+void destroy_image(Image* image){
     if (!image) return;
 
-    if (image->bitmap){
+    if (image->data){
         for (int i = 0; i < image->height; i++){
-            free(image->bitmap[i]);
+            free(image->data[i]);
         }
-        free(image->bitmap);
+        free(image->data);
     }
     free(image);
+    return;
 }
 
-img* parse(char *filepath){
+Image* load_bmp(const char *filepath){
 
     FILE *input = fopen(filepath, "rb");
     if (!input){
@@ -54,50 +50,48 @@ img* parse(char *filepath){
         return NULL;
     }
 
-    File_Header buffer;
-    size_t bytes_read = fread(&buffer, sizeof(File_Header), 1, input);
-    if (bytes_read != 1){
+    Header buffer;
+    if (fread(&buffer, sizeof(Header), 1, input) != 1){
         fprintf(stderr, "Cannot read BMP header!\n");
         fclose(input);
         return NULL;
     }
 
-    if (buffer.bmp.id[0] != 'B' || buffer.bmp.id[1] != 'M'){
+    if (buffer.bmp.id == 0x424D){
         fprintf(stderr, "Not valid BMP!\n");
         fclose(input);
         return NULL;
     }
 
+    int width = buffer.dib.width;
     int height = buffer.dib.height;
+
     if (height < 0){
         height = -height;
     }
 
-    img *image = img_init(buffer.dib.width, height);
+    Image *image = create_image(width, height);
     if (!image){
         fprintf(stderr, "Failed to allocate image!\n");
         fclose(input);
         return NULL;
     }
 
-    int padding = (4 - (buffer.dib.width * 3) % 4) % 4;
+    int padding = (4 - (width * 3) % 4) % 4;
     fseek(input, buffer.bmp.offset, SEEK_SET);
 
-    for (int y = image->height - 1; y >= 0; y--){
-        for (int x = 0; x < image->width; x++){
-            pixel p;
-            if (fread(&p, sizeof(pixel), 1, input) != 1){
+    for (int y = height - 1; y >= 0; y--){
+        for (int x = 0; x < width; x++){
+            Pixel_24 p;
+
+            if (fread(&p, sizeof(Pixel_24), 1, input) != 1){
                 fprintf(stderr, "Failed to read pixel [%d][%d] data!\n", y, x);
-                img_destroy(image);
+                destroy_image(image);
                 fclose(input);
                 return NULL;
             }
-
-            unsigned char temp = p.b;
-            p.b = p.r;
-            p.r = temp;
-
-            image->bitmap[y][x] = p;
+            
+            set_color(image, x, y, pixel_to_color(p));
         }
 
         fseek(input, padding, SEEK_CUR);
@@ -107,16 +101,19 @@ img* parse(char *filepath){
     return image;
 }
 
-void print (img *image, char *filename){
+void save_bmp (const char *filepath, Image *image){
 
-    int padding = (4 - (image->width * 3) % 4) % 4;
-    int rawBM = (image->width * 3 + padding) * image->height;
+    int width = image->width;
+    int height = image->height;
+    
+    int padding = (4 - (width * 3) % 4) % 4;
+    int rawBM = (width * 3 + padding) * height;
         
-    BMP_Header header_bmp = {"BM", 54 + rawBM, 0, 0, 54};
-    DIB_Header header_dib = {40, image->width, image->height, 1, 24, 0, rawBM, 2835, 2835, 0, 0};
-    File_Header header = {header_bmp, header_dib};
+    BMP_Header header_bmp = {0x424D, 54 + rawBM, 0, 0, 54};
+    DIB_Header header_dib = {40, width, height, 1, 24, 0, rawBM, 2835, 2835, 0, 0};
+    Header header = {header_bmp, header_dib};
 
-    FILE *output = fopen(filename, "wb");
+    FILE *output = fopen(filepath, "wb");
     if (!output){
         fprintf(stderr, "Failed to open/create an output file!\n");
         return;
@@ -128,15 +125,10 @@ void print (img *image, char *filename){
         return;
     }
 
-    for (int y = image->height-1; y >= 0; y--){
-        for (int x = 0; x < image->width; x++){
-            pixel p = image->bitmap[y][x];
-            
-            unsigned char temp = p.b;
-            p.b = p.r;
-            p.r = temp;
-
-            fwrite(&p, sizeof(pixel), 1, output);
+    for (int y = height-1; y >= 0; y--){
+        for (int x = 0; x < width; x++){
+            Pixel_24 p = color_to_pixel(get_color(image, x, y));
+            fwrite(&p, sizeof(Pixel_24), 1, output);
         }
         for (int z = 0; z < padding; z++){
             fputc(0, output);
@@ -144,4 +136,13 @@ void print (img *image, char *filename){
     }
 
     fclose(output);
+}
+
+Color get_color(Image *image, int x, int y){
+    return image->data[y][x];
+}
+
+void set_color(Image *image, int x, int y, Color color){
+    image->data[y][x] = color;
+    return;
 }
