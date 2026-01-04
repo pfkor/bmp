@@ -21,10 +21,10 @@ Image* create_image(unsigned int width, unsigned int height){
         free(image);
         return NULL;
     }
-    for (int i = 0; i < height; i++){
+    for (unsigned int i = 0; i < height; i++){
         image->data[i] = malloc(sizeof(Color) * width);
         if (!image->data[i]){
-            for (int j = 0; j < i; j++){
+            for (unsigned int j = 0; j < i; j++){
                 free(image->data[j]); // free prev rows
             }
             free(image->data);
@@ -74,37 +74,65 @@ Image* load_bmp(const char *filepath){
         return NULL;
     }
 
-    int width = buffer.dib.width;
-    int height = buffer.dib.height;
-
-    if (height < 0){
-        height = -height;
+    if (buffer.dib.bits != 24){
+        fclose(input);
+        return NULL;
     }
 
-    Image *image = create_image(width, height);
+    if (buffer.dib.compression != 0){
+        fclose(input);
+        return NULL;
+    }
+
+    if (buffer.dib.planes != 1){
+        fclose(input);
+        return NULL;
+    }
+
+    if (buffer.dib.width == 0 || buffer.dib.height == 0){
+        fclose(input);
+        return NULL;
+    }
+
+    unsigned int abs_width = (unsigned int)abs(buffer.dib.width);
+    unsigned int abs_height = (unsigned int)abs(buffer.dib.height);
+    int left_right = buffer.dib.width > 0;
+    int bottom_up = buffer.dib.height > 0;
+
+    Image *image = create_image(abs_width, abs_height);
     if (!image){
         fprintf(stderr, "Failed to allocate image!\n");
         fclose(input);
         return NULL;
     }
 
-    int padding = (4 - (width * 3) % 4) % 4;
+    int padding = (4 - (abs_width * 3) % 4) % 4;
     fseek(input, buffer.bmp.offset, SEEK_SET);
 
-    for (int y = height - 1; y >= 0; y--){
-        for (int x = 0; x < width; x++){
+    for (unsigned int y = 0; y < abs_height; y++){
+        for (unsigned int x = 0; x < abs_width; x++){
             Pixel_24 p;
-
             if (fread(&p, sizeof(Pixel_24), 1, input) != 1){
-                fprintf(stderr, "Failed to read pixel [%d][%d] data!\n", y, x);
+                fprintf(stderr, "Failed to read px\n");
                 destroy_image(image);
                 fclose(input);
                 return NULL;
             }
-            
-            set_color(image, x, y, pixel_to_color(p));
+            Color c = pixel_to_color(p);
+            if (bottom_up){
+                if (left_right){
+                    set_color(image, x, abs_height-y-1, c);
+                } else {
+                    set_color(image, abs_width-x-1, abs_height-y-1, c);
+                }
+            } else {
+                if (left_right){
+                    set_color(image, x, y, c);
+                } else {
+                    set_color(image, abs_width-x-1, y, c);
+                }
+            }
         }
-
         fseek(input, padding, SEEK_CUR);
     }
 

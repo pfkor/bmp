@@ -4,10 +4,6 @@
 #include "color.h"
 
 Color pixel_to_color(Pixel_24 pixel){
-    if (pixel.r < 0 || pixel.r >= 256 || pixel.g < 0 \
-     || pixel.g >= 256 || pixel.b < 0 || pixel.b >= 256){
-        return (Color){0, 0, 0};
-    }
     return (Color){(float) pixel.r, (float) pixel.g, (float) pixel.b};
 }
 
