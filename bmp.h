@@ -1,4 +1,5 @@
 #include <stdint.h>
+#pragma once
 
 #pragma pack(push, 1) // отключение padding-а структур, так как BMP и DIB header-ы имеют разный размер
 
@@ -31,13 +32,13 @@ typedef struct {
 
 #pragma pack(pop) // возвращаем как было (там стек)
 
-typedef struct {
+typedef struct pxl {
     unsigned char r;
     unsigned char g;
     unsigned char b;
 } pixel;
 
-typedef struct {
+typedef struct image{
     unsigned int width;
     unsigned int height;
     pixel **bitmap;
