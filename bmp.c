@@ -68,7 +68,7 @@ Image* load_bmp(const char *filepath){
         return NULL;
     }
 
-    if (buffer.bmp.id == 0x424D){
+    if (buffer.bmp.id != 0x4D42){
         fprintf(stderr, "Not valid BMP!\n");
         fclose(input);
         return NULL;
@@ -124,7 +124,7 @@ void save_bmp (const char *filepath, Image *image){
     int padding = (4 - (width * 3) % 4) % 4;
     int rawBM = (width * 3 + padding) * height;
         
-    BMP_Header header_bmp = {0x424D, 54 + rawBM, 0, 0, 54};
+    BMP_Header header_bmp = {0x4D42, 54 + rawBM, 0, 0, 54};
     DIB_Header header_dib = {40, width, height, 1, 24, 0, rawBM, 2835, 2835, 0, 0};
     Header header = {header_bmp, header_dib};
 

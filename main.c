@@ -17,7 +17,15 @@ int main(){
         return 1;
     }
 
-    console_img(source);
+    // console_img(source);
+    save_bmp("./img/saved.bmp", source);
+    destroy_image(source);
+
+    source = load_bmp("./img/saved.bmp");
+    if (!source){
+        fprintf(stderr, "Failed to parse %s file!\n", path);
+        return 1;
+    }
     destroy_image(source);
     return 0;
 }
