@@ -4,8 +4,14 @@
 #include "bmp.h"
 
 Image* create_image(unsigned int width, unsigned int height){
+    if (width == 0 || height == 0){
+        return NULL;
+    }
+
     Image* image= malloc(sizeof(Image));
-    if (!image) return NULL;
+    if (!image){
+        return NULL;
+    }
 
     image->width = width;
     image->height = height;
@@ -30,7 +36,9 @@ Image* create_image(unsigned int width, unsigned int height){
 }
 
 void destroy_image(Image* image){
-    if (!image) return;
+    if (!image){
+        return;
+    }
 
     if (image->data){
         for (int i = 0; i < image->height; i++){
@@ -43,6 +51,9 @@ void destroy_image(Image* image){
 }
 
 Image* load_bmp(const char *filepath){
+    if (!filepath){
+        return NULL;
+    }
 
     FILE *input = fopen(filepath, "rb");
     if (!input){
@@ -103,6 +114,10 @@ Image* load_bmp(const char *filepath){
 
 void save_bmp (const char *filepath, Image *image){
 
+    if (!filepath || !image){
+        return;
+    }
+
     int width = image->width;
     int height = image->height;
     
@@ -139,10 +154,16 @@ void save_bmp (const char *filepath, Image *image){
 }
 
 Color get_color(Image *image, int x, int y){
+    if (!image || !image->data || x < 0 || x >= image->width || y < 0 || y >= image->height){
+        return (Color){0, 0, 0};
+    }
     return image->data[y][x];
 }
 
 void set_color(Image *image, int x, int y, Color color){
+    if (!image || !image->data || x < 0 || x >= image->width || y < 0 || y >= image->height){
+        return;
+    }
     image->data[y][x] = color;
     return;
 }
