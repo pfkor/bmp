@@ -30,34 +30,36 @@ int main(int argN, char* args[]) {
     for(int i = 3; i < argN; i++){
         Filter new_filter;
         if(strcmp(args[i], "-red") == 0){
-          new_filter.Type = RED; // вот это все присваивание надо будет занести в отдельную функцию типа createFilter()
-          new_filter.params.pixelFunc = &red;
-
+          new_filter = filter_init(RED, NULL, &red);
         }
-        if(strcmp(args[i], "-blue") == 0){
-            new_filter.Type = BLUE;
-            new_filter.params.pixelFunc = &blue;
-
+        else if(strcmp(args[i], "-blue") == 0){
+            new_filter = filter_init(BLUE, NULL, &blue);
         }
-        if(strcmp(args[i], "-green") == 0){
-            new_filter.Type = GREEN;
-            new_filter.params.pixelFunc = &green;
-
+        else if(strcmp(args[i], "-green") == 0) {
+            new_filter = filter_init(GREEN, NULL, &green);
         }
-        if(strcmp(args[i], "-yellow") == 0){
-            new_filter.Type = YELLOW;
-            new_filter.params.pixelFunc = &yellow;
-
+        else if(strcmp(args[i], "-yellow") == 0) {
+            new_filter = filter_init(YELLOW, NULL, &yellow);
+        }
+        else if(strcmp(args[i], "-magenta") == 0) {
+            new_filter = filter_init(MAGENTA, NULL, &magenta);
+        }
+        else if(strcmp(args[i], "-cyan") == 0) {
+            new_filter = filter_init(CYAN, NULL, &cyan);
+        }
+        else if(strcmp(args[i], "-neg") == 0) {
+            new_filter = filter_init(NEG, NULL, &neg);
+        }
+        else if(strcmp(args[i], "-gs") == 0) {
+            new_filter = filter_init(GS, NULL, &grayscale);
         }
 
         add_filter(pipeline,new_filter);
-
-
-
 
     }
 
     apply_pipeline(inputIm, pipeline);
     print(inputIm,output_file);
+    free_pipeline(pipeline);
 
 }
