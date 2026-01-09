@@ -1,5 +1,4 @@
-#ifndef COLOR_H
-#define COLOR_H
+#pragma once
 
 #include <stdint.h>
 
@@ -17,5 +16,3 @@ typedef struct {
 
 Color pixel_to_color(Pixel_24 pixel);
 Pixel_24 color_to_pixel(Color color);
-
-#endif

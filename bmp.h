@@ -1,5 +1,4 @@
-#ifndef BMP_H
-#define BMP_H
+#pragma once 
 
 #include <stdint.h>
 #include "color.h"
@@ -49,5 +48,3 @@ void save_bmp(const char *filepath, Image *image);
 
 Color get_color(Image *image, int x, int y);
 void set_color(Image *image, int x, int y, Color color);
-
-#endif

@@ -23,7 +23,7 @@ void add_filter(FilterPipeline* pipeline, Filter filter){
     pipeline->count++;
 }
 
-img* apply_pipeline(img* image, FilterPipeline* pipeline){
+Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
   for(int i = 0; i < pipeline->count; i++){
       Filter currFilter = pipeline->filters[i];
 
