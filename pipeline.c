@@ -8,8 +8,9 @@ FilterPipeline* create_pipeline(){
     return  result;
 }
 
-void free_pipeline(FilterPipeline* pipeline){
+void destroy_pipeline(FilterPipeline* pipeline){
     free(pipeline->filters);
+    free(pipeline);
     // тут ещё по идее надо будет проверять нет у фильтра с собой матрицы в кармане
 }
 

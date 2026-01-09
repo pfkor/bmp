@@ -6,8 +6,6 @@
 
 #include "filters.h"
 
-// typedef struct image img;
-
 typedef struct {
     Filter* filters;
     int count;
@@ -15,7 +13,8 @@ typedef struct {
 } FilterPipeline;
 
 FilterPipeline* create_pipeline();
-void free_pipeline(FilterPipeline* pipeline);
+void destroy_pipeline(FilterPipeline* pipeline);
+
 void add_filter(FilterPipeline* pipeline, Filter filter);
 Image* apply_pipeline(Image* image, FilterPipeline* pipeline);
 

@@ -2,9 +2,6 @@
 
 #include "bmp.h"
 
-// typedef struct image img;
-// typedef struct pxl pixel;
-
 typedef enum {
     COPY, FLIP_H, FLIP_V, FLIP_BOTH,
     RED, GREEN, BLUE, NEG, YELLOW, CYAN, MAGENTA, GS,

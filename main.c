@@ -54,7 +54,7 @@ int main(int argn, char *args[]){
     save_bmp(output_path, image);
 
     destroy_image(image);
-    free(pipeline);
+    destroy_pipeline(pipeline);
     return 0;
 }
 
