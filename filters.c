@@ -28,23 +28,23 @@ void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
 
 }
 // Я понимаю что это не очень читабельно, но мне душа не позволяет эти функции в одну строчку разворачивать, надеюсь не помешает
-void red(Pixel_24* pxl){*pxl = (Pixel_24){pxl->r, 0, 0};}
+void red(Color* pxl){*pxl = (Color){pxl->r, 0, 0};}
 
-void green(Pixel_24* pxl){*pxl = (Pixel_24){0, pxl->g, 0};}
+void green(Color* pxl){*pxl = (Color){0, pxl->g, 0};}
 
-void blue(Pixel_24* pxl){*pxl = (Pixel_24){0, 0, pxl->b};}
+void blue(Color* pxl){*pxl = (Color){0, 0, pxl->b};}
 
-void yellow(Pixel_24* pxl){*pxl = (Pixel_24){pxl->r, pxl->g, 0};}
+void yellow(Color* pxl){*pxl = (Color){pxl->r, pxl->g, 0};}
 
-void neg(Pixel_24* pxl){*pxl = (Pixel_24){255-pxl->r, 255-pxl->g, 255-pxl->b};}
+void neg(Color* pxl){*pxl = (Color){255-pxl->r, 255-pxl->g, 255-pxl->b};}
 
-void cyan(Pixel_24* pxl){*pxl = (Pixel_24){0, pxl->g, pxl->b};}
+void cyan(Color* pxl){*pxl = (Color){0, pxl->g, pxl->b};}
 
-void magenta(Pixel_24* pxl){*pxl = (Pixel_24){pxl->r, 0, pxl->b};}
+void magenta(Color* pxl){*pxl = (Color){pxl->r, 0, pxl->b};}
 
-void grayscale(Pixel_24* pxl){
+void grayscale(Color* pxl){
     int average = (0.299 * pxl->r + 0.587 * pxl->g + 0.114 * pxl->b);
-    *pxl = (Pixel_24){average, average, average};
+    *pxl = (Color){average, average, average};
 }
 
 

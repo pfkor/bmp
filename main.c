@@ -9,26 +9,52 @@
 
 void console_img (Image*);
 
-int main(){
+int main(int argn, char *args[]){
 
-    char *path = "./img/lenna.bmp";
-    
-    Image *source = load_bmp(path);
-    if (!source){
-        fprintf(stderr, "Failed to parse %s file!\n", path);
+    if (argn < 3){
+        fprintf(stdout, "Usage: ./program <input> <output> <...>\n");
         return 1;
     }
 
-    // console_img(source);
-    save_bmp("./img/saved.bmp", source);
-    destroy_image(source);
+    char *input_path = args[1];
+    char *output_path = args[2];
 
-    source = load_bmp("./img/saved.bmp");
-    if (!source){
-        fprintf(stderr, "Failed to parse %s file!\n", path);
+    Image *image = load_bmp(input_path);
+    if (!image){
+        destroy_image(image);
         return 1;
+    }   
+
+    FilterPipeline *pipeline = create_pipeline();
+    for (int i = 3; i < argn; i++){
+        Filter cur_filter;
+        if (strcmp(args[i], "-red") == 0){
+            cur_filter = filter_init(RED, NULL, &red);
+        } 
+        else if (strcmp(args[i], "-green") == 0){
+            cur_filter = filter_init(GREEN, NULL, &green);
+        }
+        else if (strcmp(args[i], "-blue") == 0){
+            cur_filter = filter_init(BLUE, NULL, &blue);
+        }
+        else if (strcmp(args[i], "-neg") == 0){
+            cur_filter = filter_init(NEG, NULL, &neg);
+        }
+        else if (strcmp(args[i], "-gs") == 0){
+            cur_filter = filter_init(GS, NULL, &grayscale);
+        }
+        else{
+            fprintf(stderr, "Unknown filter %s!\n", args[i]);
+            continue;
+        }
+        add_filter(pipeline, cur_filter);
     }
-    destroy_image(source);
+
+    apply_pipeline(image, pipeline);
+    save_bmp(output_path, image);
+
+    destroy_image(image);
+    free(pipeline);
     return 0;
 }
 

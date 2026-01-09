@@ -26,14 +26,14 @@ Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*))
 
 void all_pixel_proccess(Image* image, void (*pixel_func)(Color*));
 
-void red(Pixel_24* pxl);
-void green(Pixel_24* pxl);
-void blue(Pixel_24* pxl);
-void neg(Pixel_24* pxl);
-void yellow(Pixel_24* pxl);
-void cyan(Pixel_24* pxl);
-void magenta(Pixel_24* pxl);
-void grayscale(Pixel_24* pxl);
+void red(Color* pxl);
+void green(Color* pxl);
+void blue(Color* pxl);
+void neg(Color* pxl);
+void yellow(Color* pxl);
+void cyan(Color* pxl);
+void magenta(Color* pxl);
+void grayscale(Color* pxl);
 void flip_h(Image* image);
 void flip_v(Image* image);
 void flip_both(Image* image);

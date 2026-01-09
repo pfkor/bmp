@@ -68,11 +68,11 @@ Image* load_bmp(const char *filepath){
         return NULL;
     }
 
-    if (buffer.bmp.id != 0x4D42){
-        fprintf(stderr, "Not valid BMP!\n");
-        fclose(input);
-        return NULL;
-    }
+    // if (buffer.bmp.id != 0x4D42){
+    //     fprintf(stderr, "Not valid BMP!\n");
+    //     fclose(input);
+    //     return NULL;
+    // }
 
     if (buffer.dib.bits != 24){
         fclose(input);
@@ -141,7 +141,7 @@ Image* load_bmp(const char *filepath){
 }
 
 void save_bmp (const char *filepath, Image *image){
-
+    
     if (!filepath || !image){
         return;
     }
