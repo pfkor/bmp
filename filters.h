@@ -11,17 +11,18 @@ typedef enum {
 typedef union {
     void (*pixelFunc)(Color*);
     // тут ещё потом матрицы будут,но может и надо будет какое-то другое решение, а то вдруг нужна будет и матрица и функция
-}FilParams;
+}FilterParams;
 
 typedef struct {
     FilterType Type;
     char args[1024];
-    FilParams params;
+    FilterParams params;
 }Filter;
 
 Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*));
 
 void all_pixel_proccess(Image* image, void (*pixel_func)(Color*));
+void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
 
 void red(Color* pxl);
 void green(Color* pxl);

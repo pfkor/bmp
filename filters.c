@@ -27,6 +27,23 @@ void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
     }
 
 }
+
+void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor){
+    if (r_factor < 0 || r_factor > 1 || g_factor < 0 || g_factor > 1 || b_factor < 0 || b_factor > 1){
+        return;
+    }
+    
+    for (int y = 0; y < image->height; y++){
+        for (int x = 0; x < image->width; x++){
+            Color c = get_color(image, x, y);
+            c.r *= r_factor;
+            c.g *= g_factor;
+            c.b *= b_factor;
+            set_color(image, x, y, c);
+        }
+    }
+}
+
 // Я понимаю что это не очень читабельно, но мне душа не позволяет эти функции в одну строчку разворачивать, надеюсь не помешает
 void red(Color* pxl){*pxl = (Color){pxl->r, 0, 0};}
 

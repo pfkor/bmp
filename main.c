@@ -34,8 +34,8 @@ int main(int argn, char *args[]){
         else if (strcmp(args[i], "-green") == 0){
             cur_filter = filter_init(GREEN, NULL, &green);
         }
-        else if (strcmp(args[i], "-blue") == 0){
-            cur_filter = filter_init(BLUE, NULL, &blue);
+        else if (strcmp(args[i], "-cyan") == 0){
+            cur_filter = filter_init(CYAN, NULL, &blue);
         }
         else if (strcmp(args[i], "-neg") == 0){
             cur_filter = filter_init(NEG, NULL, &neg);
