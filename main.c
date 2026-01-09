@@ -4,6 +4,8 @@
 #include <string.h> 
 
 #include "bmp.h"
+#include "filters.h"
+#include "pipeline.h"
 
 void console_img (Image*);
 
