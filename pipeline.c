@@ -36,15 +36,21 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     //   }
     
     switch (currFilter.Type) {
+      
     case RED:     multiply_channels(image, 1, 0, 0); break;
     case GREEN:   multiply_channels(image, 0, 1, 0); break;
     case BLUE:    multiply_channels(image, 0, 0, 1); break;
+
     case YELLOW:  multiply_channels(image, 1, 1, 0); break;
     case MAGENTA: multiply_channels(image, 1, 0, 1); break;
     case CYAN:    multiply_channels(image, 0, 1, 1); break;
-    
+
+    case NEG:     negative(image); break;
+    case GS:      monochrome(image); break;
+
+    case CROP:    crop(image, 0, 1024, 0, 1024); break;
+
     default: break;
     }
-
   }
 }

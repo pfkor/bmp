@@ -17,15 +17,14 @@ Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*))
 }
 
 // void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
+//     if (!image || !image->data) return;
 //     unsigned int h = image->height;
 //     unsigned int w = image->width;
-
 //     for(int y = 0; y < h; y++){
 //         for(int x = 0; x < w; x++){
 //             pixel_func(&image->data[y][x]);
 //         }
 //     }
-
 // }
 
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
@@ -74,12 +73,13 @@ void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_f
 }
 
 void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor){
+    if (!image || !image->data) return;
     if (r_factor < 0 || r_factor > 1 || g_factor < 0 || g_factor > 1 || b_factor < 0 || b_factor > 1){
         return;
     }
     
-    for (int y = 0; y < image->height; y++){
-        for (int x = 0; x < image->width; x++){
+    for (unsigned int y = 0; y < image->height; y++){
+        for (unsigned int x = 0; x < image->width; x++){
             Color c = get_color(image, x, y);
             c.r *= r_factor;
             c.g *= g_factor;
@@ -87,6 +87,34 @@ void multiply_channels(Image* image, float r_factor, float g_factor, float b_fac
             set_color(image, x, y, c);
         }
     }
+}
+
+void negative (Image *image){
+    if (!image || !image->data) return;
+
+    for (unsigned int y = 0; y < image->height; y++){
+        for (unsigned int x = 0; x < image->width; x++){
+            Color c = get_color(image, x, y);
+            c.r = 255 - c.r;
+            c.g = 255 - c.g;
+            c.b = 255 - c.b;
+            set_color(image, x, y, c);
+        }
+    }
+}
+
+void monochrome (Image *image){
+    if (!image || !image->data) return;
+
+    for (unsigned int y = 0; y < image->height; y++){
+        for (unsigned int x = 0; x < image->width; x++){
+            Color c = get_color(image, x, y);
+            c.r = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+            c.g = c.r;
+            c.b = c.r;
+            set_color(image, x, y, c);
+        }
+    }   
 }
 
 void get_window(Image *window, unsigned int x, unsigned int y, Image *image){
@@ -112,7 +140,6 @@ void get_window(Image *window, unsigned int x, unsigned int y, Image *image){
         }
     }
 }
-
 Color impose_matrix(Image *window, int **matrix){
     if (!window || !window->data) return (Color){0, 0, 0};
     Color res = {0, 0, 0};
@@ -129,8 +156,8 @@ Color impose_matrix(Image *window, int **matrix){
     limit_color(&res);
     return res;
 }
-
 void matrix_sharpening(Image* image){
+
     if (!image || !image->data) return;
 
     unsigned int w = image->width;
@@ -149,9 +176,9 @@ void matrix_sharpening(Image* image){
     }
     
     int kernel_data[3][3] = {
-        { 0, -2,  0},
-        {-2,  9, -2},
-        { 0, -2,  0}
+        { 0, -1,  0},
+        {-1,  5, -1},
+        { 0, -1,  0}
     };
     
     for (int i = 0; i < 3; i++){
@@ -198,6 +225,8 @@ void matrix_sharpening(Image* image){
     free(kernel);
 }
 
+
+
 // Я понимаю что это не очень читабельно, но мне душа не позволяет эти функции в одну строчку разворачивать, надеюсь не помешает
 void red(Color* pxl){*pxl = (Color){pxl->r, 0, 0};}
 
@@ -212,11 +241,5 @@ void neg(Color* pxl){*pxl = (Color){255-pxl->r, 255-pxl->g, 255-pxl->b};}
 void cyan(Color* pxl){*pxl = (Color){0, pxl->g, pxl->b};}
 
 void magenta(Color* pxl){*pxl = (Color){pxl->r, 0, pxl->b};}
-
-void grayscale(Color* pxl){
-    int average = (0.299 * pxl->r + 0.587 * pxl->g + 0.114 * pxl->b);
-    *pxl = (Color){average, average, average};
-}
-
 
 
