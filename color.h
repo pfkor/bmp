@@ -16,3 +16,5 @@ typedef struct {
 
 Color pixel_to_color(Pixel_24 pixel);
 Pixel_24 color_to_pixel(Color color);
+
+void limit_color(Color *color);

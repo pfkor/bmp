@@ -27,33 +27,33 @@ int main(int argn, char *args[]){
 
     FilterPipeline *pipeline = create_pipeline();
     // add_filter(pipeline, filter_init(CROP, NULL, NULL));
-    matrix(image);
+    matrix_sharpening(image);
 
-    for (int i = 3; i < argn; i++){
-        Filter cur_filter;
-        if (strcmp(args[i], "-red") == 0){
-            cur_filter = filter_init(RED, NULL, &red);
-        } 
-        else if (strcmp(args[i], "-green") == 0){
-            cur_filter = filter_init(GREEN, NULL, &green);
-        }
-        else if (strcmp(args[i], "-cyan") == 0){
-            cur_filter = filter_init(CYAN, NULL, &blue);
-        }
-        else if (strcmp(args[i], "-neg") == 0){
-            cur_filter = filter_init(NEG, NULL, &neg);
-        }
-        else if (strcmp(args[i], "-gs") == 0){
-            cur_filter = filter_init(GS, NULL, &grayscale);
-        }
-        else{
-            fprintf(stderr, "Unknown filter %s!\n", args[i]);
-            continue;
-        }
-        add_filter(pipeline, cur_filter);
-    }
+    // for (int i = 3; i < argn; i++){
+    //     Filter cur_filter;
+    //     if (strcmp(args[i], "-red") == 0){
+    //         cur_filter = filter_init(RED, NULL, &red);
+    //     } 
+    //     else if (strcmp(args[i], "-green") == 0){
+    //         cur_filter = filter_init(GREEN, NULL, &green);
+    //     }
+    //     else if (strcmp(args[i], "-cyan") == 0){
+    //         cur_filter = filter_init(CYAN, NULL, &blue);
+    //     }
+    //     else if (strcmp(args[i], "-neg") == 0){
+    //         cur_filter = filter_init(NEG, NULL, &neg);
+    //     }
+    //     else if (strcmp(args[i], "-gs") == 0){
+    //         cur_filter = filter_init(GS, NULL, &grayscale);
+    //     }
+    //     else{
+    //         fprintf(stderr, "Unknown filter %s!\n", args[i]);
+    //         continue;
+    //     }
+    //     add_filter(pipeline, cur_filter);
+    // }
 
-    apply_pipeline(image, pipeline);
+    // apply_pipeline(image, pipeline);
     save_bmp(output_path, image);
 
     destroy_image(image);

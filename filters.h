@@ -25,6 +25,7 @@ void all_pixel_proccess(Image* image, void (*pixel_func)(Color*));
 
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to);
 void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
+void matrix_sharpening(Image* image);
 
 void red(Color* pxl);
 void green(Color* pxl);
