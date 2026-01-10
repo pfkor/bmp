@@ -27,6 +27,7 @@ int main(int argn, char *args[]){
 
     FilterPipeline *pipeline = create_pipeline();
     // add_filter(pipeline, filter_init(CROP, NULL, NULL));
+    matrix(image);
 
     for (int i = 3; i < argn; i++){
         Filter cur_filter;

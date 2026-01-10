@@ -27,6 +27,7 @@ void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
     }
 
 }
+
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
     if (!image || !image->data) return;
     
@@ -58,7 +59,7 @@ void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_f
 
     for (unsigned int y = 0; y < new_h; y++){
         for (unsigned int x = 0; x < new_w; x++){
-            temp[y][x] = image->data[y_from + y][x_from + x];
+            set_color(temp, x, y, get_color(image, y_from + y, x_from + x));
         }
     }
 
