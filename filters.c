@@ -27,6 +27,50 @@ void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
     }
 
 }
+void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
+    if (!image || !image->data) return;
+    
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+    if (w == 0 || h == 0 || \
+    x_from >= w || x_to >= w || x_to <= x_from || \
+    y_from >= h || y_to >= h || y_to <= y_from){
+        return;
+    }
+
+    unsigned int new_w = x_to - x_from;
+    unsigned int new_h = y_to - y_from;
+
+    Color **temp = malloc(sizeof(Color *) * new_h);
+    if (!temp) return;
+
+    for (unsigned int y = 0; y < new_h; y++){
+        temp[y] = malloc(sizeof(Color) * new_w);
+        if (!temp[y]){
+
+            for (unsigned int j = 0; j < y; j++){
+                free(temp[j]);
+            }
+            free(temp);
+            return;
+        }
+    }
+
+    for (unsigned int y = 0; y < new_h; y++){
+        for (unsigned int x = 0; x < new_w; x++){
+            temp[y][x] = image->data[y_from + y][x_from + x];
+        }
+    }
+
+    for (int y = 0; y < h; y++){
+        free(image->data[y]);
+    }
+    free(image->data);
+
+    image->width = new_w;
+    image->height = new_h;
+    image->data = temp;
+}
 
 void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor){
     if (r_factor < 0 || r_factor > 1 || g_factor < 0 || g_factor > 1 || b_factor < 0 || b_factor > 1){
