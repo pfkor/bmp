@@ -140,16 +140,16 @@ void get_window(Image *window, unsigned int x, unsigned int y, Image *image){
         }
     }
 }
-Color impose_matrix(Image *window, int **matrix){
+Color impose_matrix(Image *window, int *matrix,  int size){
     if (!window || !window->data) return (Color){0, 0, 0};
     Color res = {0, 0, 0};
     
     for (int y = 0; y < window->height; y++){
         for (int x = 0; x < window->width; x++){
             Color cur = get_color(window, x, y);
-            res.r += cur.r * matrix[y][x];
-            res.g += cur.g * matrix[y][x];
-            res.b += cur.b * matrix[y][x];
+            res.r += cur.r * matrix[y * size + x];
+            res.g += cur.g * matrix[y * size + x];
+            res.b += cur.b * matrix[y * size + x];
         }
     }
 
@@ -162,43 +162,19 @@ void matrix_sharpening(Image* image){
 
     unsigned int w = image->width;
     unsigned int h = image->height;
-    
-    int **kernel = malloc(sizeof(int *) * 3);
-    if (!kernel) return;
-    
-    for (int i = 0; i < 3; i++){
-        kernel[i] = (int*)malloc(3 * sizeof(int));
-        if (!kernel[i]){
-            for (int j = 0; j < i; j++) free(kernel[j]);
-            free(kernel);
-            return;
-        }
-    }
-    
-    int kernel_data[3][3] = {
-        { 0, -1,  0},
-        {-1,  5, -1},
-        { 0, -1,  0}
-    };
-    
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            kernel[i][j] = kernel_data[i][j];
-        }
-    }
+
+
+    int kernel[9] = {0, -1, 0, -1, 5, -1, 0, -1, 0};
+
 
     Image *temp = create_image(w, h);
     if (!temp){
-        for (int i = 0; i < 3; i++) free(kernel[i]);
-        free(kernel);
         return;
     }
 
     Image *window = create_image(3, 3);
     if (!window){
         destroy_image(temp);
-        for (int i = 0; i < 3; i++) free(kernel[i]);
-        free(kernel);
         return;
     }
 
@@ -206,7 +182,7 @@ void matrix_sharpening(Image* image){
         for (unsigned int x = 0; x < w; x++){
 
             get_window(window, x, y, image);
-            Color sum = impose_matrix(window, kernel);
+            Color sum = impose_matrix(window, kernel, 3);
             limit_color(&sum);
 
             set_color(temp, x, y, sum);
@@ -221,8 +197,6 @@ void matrix_sharpening(Image* image){
 
     destroy_image(window);
     destroy_image(temp);
-    for (int i = 0; i < 3; i++) free(kernel[i]);
-    free(kernel);
 }
 
 
