@@ -48,7 +48,9 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case NEG:     negative(image); break;
     case GS:      monochrome(image); break;
 
-    case CROP:    crop(image, 0, 1024, 0, 1024); break;
+    case CROP:    crop(image, 0, currFilter.params.crop.width, 0, currFilter.params.crop.height); break;
+
+    case SHARP:   matrix_sharpening(image); break;
 
     default: break;
     }

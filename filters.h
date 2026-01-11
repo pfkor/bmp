@@ -9,13 +9,26 @@ typedef enum {
 } FilterType;
 
 typedef union {
-    void (*pixelFunc)(Color*);
-    // тут ещё потом матрицы будут,но может и надо будет какое-то другое решение, а то вдруг нужна будет и матрица и функция
+    struct {
+        int width;
+        int height;
+    } crop;
+    struct {
+        float threshold;
+    } edge;
+    struct {
+        int window;
+    } median;
+    struct {
+        float sigma;
+    } blur;
+    struct {
+        char dummy;  // Заглушка для фильтров без параметров
+    } none;
 }FilterParams;
 
 typedef struct {
     FilterType Type;
-    char args[1024];
     FilterParams params;
 }Filter;
 
@@ -29,15 +42,3 @@ void matrix_sharpening(Image* image);
 
 void negative (Image *image);
 void monochrome (Image *image);
-
-void red(Color* pxl);
-void green(Color* pxl);
-void blue(Color* pxl);
-void neg(Color* pxl);
-void yellow(Color* pxl);
-void cyan(Color* pxl);
-void magenta(Color* pxl);
-void grayscale(Color* pxl);
-void flip_h(Image* image);
-void flip_v(Image* image);
-void flip_both(Image* image);

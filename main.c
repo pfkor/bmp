@@ -7,6 +7,7 @@
 #include "filters.h"
 #include "pipeline.h"
 
+
 void console_img (Image*);
 
 int main(int argn, char *args[]){
@@ -30,19 +31,36 @@ int main(int argn, char *args[]){
     for (int i = 3; i < argn; i++){
         Filter cur_filter;
         if (strcmp(args[i], "-red") == 0){
-            cur_filter = filter_init(RED, NULL, &red);
+            cur_filter.Type = RED;
+            cur_filter.params.none.dummy = 0;
         } 
         else if (strcmp(args[i], "-cyan") == 0){
-            cur_filter = filter_init(CYAN, NULL, &cyan);
+            cur_filter.Type = CYAN;
+            cur_filter.params.none.dummy = 0;
         }
         else if (strcmp(args[i], "-neg") == 0){
-            cur_filter = filter_init(NEG, NULL, &neg);
+            cur_filter.Type = NEG;
+            cur_filter.params.none.dummy = 0;
         }
         else if (strcmp(args[i], "-gs") == 0){
-            cur_filter = filter_init(GS, NULL, &red);
+            cur_filter.Type = GS;
+            cur_filter.params.none.dummy = 0;
         }
         else if (strcmp(args[i], "-crop") == 0){
-            cur_filter = filter_init(CROP, NULL, NULL);
+            if(i + 2 < argn){
+                cur_filter.Type = CROP;
+                cur_filter.params.crop.width = atoi(args[i+1]);
+                cur_filter.params.crop.height = atoi(args[i+2]);
+                i+=2;
+            }
+            else{
+                fprintf(stdout, "Wrong or no args for filter");
+                return 1;
+            }
+        }
+        else if (strcmp(args[i], "-sharp") == 0){
+            cur_filter.Type = SHARP;
+            cur_filter.params.none.dummy = 0;
         }
         else{
             fprintf(stderr, "Unknown filter %s!\n", args[i]);
@@ -56,6 +74,7 @@ int main(int argn, char *args[]){
 
     destroy_image(image);
     destroy_pipeline(pipeline);
+    fprintf(stdout, "Successfully runed\n");
     return 0;
 }
 
