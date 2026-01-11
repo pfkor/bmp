@@ -22,6 +22,7 @@ int main(int argn, char *args[]){
 
     Image *image = load_bmp(input_path);
     if (!image){
+        fprintf(stdout, "Input file issue\n");
         destroy_image(image);
         return 1;
     }   
@@ -61,6 +62,28 @@ int main(int argn, char *args[]){
         else if (strcmp(args[i], "-sharp") == 0){
             cur_filter.Type = SHARP;
             cur_filter.params.none.dummy = 0;
+        }
+        else if (strcmp(args[i], "-edge") == 0){
+            if(i + 1 < argn){
+                cur_filter.Type = EDGE;
+                cur_filter.params.edge.threshold = atof(args[i+1]);
+                i++;
+            }
+            else{
+                fprintf(stdout, "Wrong or no args for filter");
+                return 1;
+            }
+        }
+        else if (strcmp(args[i], "-med") == 0){
+            if(i + 1 < argn){
+                cur_filter.Type = MED;
+                cur_filter.params.median.window = atoi(args[i+1]);
+                i++;
+            }
+            else{
+                fprintf(stdout, "Wrong or no args for filter");
+                return 1;
+            }
         }
         else{
             fprintf(stderr, "Unknown filter %s!\n", args[i]);

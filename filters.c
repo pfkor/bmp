@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <float.h>
 
 #include "bmp.h"
 
@@ -186,6 +188,116 @@ void matrix_sharpening(Image* image){
             limit_color(&sum);
 
             set_color(temp, x, y, sum);
+        }
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+            set_color(image, x, y, get_color(temp, x, y));
+        }
+    }
+
+    destroy_image(window);
+    destroy_image(temp);
+}
+
+void edge(Image* image, float threshold){
+    if (!image || !image->data) return;
+
+    monochrome(image);
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+
+    int kernel[9] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
+
+
+    Image *temp = create_image(w, h);
+    if (!temp){
+        return;
+    }
+
+    Image *window = create_image(3, 3);
+    if (!window){
+        destroy_image(temp);
+        return;
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+
+            get_window(window, x, y, image);
+            Color sum = impose_matrix(window, kernel, 3);
+            if(sum.r/255 > threshold || sum.g/255 > threshold  || sum.b/255 > threshold){
+                set_color(temp, x, y, (Color){255, 255, 255});
+            }
+            else{
+                set_color(temp, x, y, (Color){0, 0, 0});
+            }
+
+        }
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+            set_color(image, x, y, get_color(temp, x, y));
+        }
+    }
+
+    destroy_image(window);
+    destroy_image(temp);
+}
+
+static Color median_color(Image* window){
+    unsigned int window_side = window->height;
+    unsigned int cen_xy = (window_side - 1)/2;
+    Color cen_color = get_color(window, cen_xy, cen_xy);
+    Color min_color = {0,0,0};
+    float min_dist = HUGE_VALF;
+    for(unsigned int y = 0; y < window_side; y++){
+        for(unsigned int x = 0; x < window_side; x++){
+            if(y != cen_xy && x != cen_xy){
+                Color cur_color = get_color(window, x,y);
+                float dist = (cen_color.r - cur_color.r) * (cen_color.r - cur_color.r) +  (cen_color.g - cur_color.g) * (cen_color.g - cur_color.g) + (cen_color.b - cur_color.b) * (cen_color.b - cur_color.b);
+                if(dist < min_dist){
+                    min_color = cur_color;
+                    min_dist = dist;
+                }
+
+            }
+        }
+    }
+    return min_color;
+
+
+}
+
+void median(Image* image, int wind_size){
+    if (!image || !image->data) return;
+
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+
+    Image *temp = create_image(w, h);
+    if (!temp){
+        return;
+    }
+
+    Image *window = create_image(wind_size, wind_size);
+    if (!window){
+        destroy_image(temp);
+        return;
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+
+            get_window(window, x, y, image);
+            Color med = median_color(window);
+            limit_color(&med);
+
+            set_color(temp, x, y, med);
         }
     }
 

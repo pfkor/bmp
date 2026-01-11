@@ -51,6 +51,9 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case CROP:    crop(image, 0, currFilter.params.crop.width, 0, currFilter.params.crop.height); break;
 
     case SHARP:   matrix_sharpening(image); break;
+    case EDGE:   edge(image, currFilter.params.edge.threshold); break;
+
+    case MED:    median(image, currFilter.params.median.window);
 
     default: break;
     }
