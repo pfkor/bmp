@@ -4,8 +4,20 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
+#include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "bmp.h"
+
+#define swap(type) \
+    type swap_ ## type(type* a, type* b) { \
+        int temp = *a;\
+        *a = *b;\
+        *b = temp;\
+    }
+
+swap(float);
 
 //Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*)) {
 //    Filter new_filter;
@@ -248,6 +260,55 @@ void edge(Image* image, float threshold){
     destroy_image(temp);
 }
 
+
+static int partition(float arr[], int left, int right, int pivot_index) {
+    int pivot_value = arr[pivot_index];
+
+    swap_float(&arr[pivot_index], &arr[right]); // убираем пивот в конец, потом найдется нужное место
+
+    int store_index = left;
+    for (int i = left; i < right; i++) { // пробегаем не доходя до конца, где лежит пивот
+        if (arr[i] <= pivot_value) {
+            swap_float(&arr[i], &arr[store_index]);
+            store_index++;
+        }
+    }
+    swap_float(&arr[store_index], &arr[right]); // store_index будет именно там где граница между маленькими и большими
+    return store_index;
+}
+
+
+static float quick_select(float arr[], int left, int right, int k){
+    while (left < right) {
+        int pivot_index = left + rand() % (right - left + 1);
+        pivot_index = partition(arr, left, right, pivot_index);
+
+        if (k == pivot_index) {
+            return arr[k];
+        } else if (k < pivot_index) {
+            right = pivot_index - 1;
+        } else {
+            left = pivot_index + 1;
+        }
+    }
+    return arr[left];
+
+}
+
+static float quick_select_small(float arr[], int n, int k) {
+    // Для малых n (≤49) проще использовать частичную сортировку
+    for (int i = 0; i <= k; i++) {
+        int min_idx = i;
+        for (int j = i + 1; j < n; j++) {
+            if (arr[j] < arr[min_idx]) min_idx = j;
+        }
+        float tmp = arr[i];
+        arr[i] = arr[min_idx];
+        arr[min_idx] = tmp;
+    }
+    return arr[k];
+}
+
 static Color median_color(Image* window){
     unsigned int window_side = window->height;
     unsigned int cen_xy = (window_side - 1)/2;
@@ -258,7 +319,7 @@ static Color median_color(Image* window){
         for(unsigned int x = 0; x < window_side; x++){
             if(y != cen_xy && x != cen_xy){
                 Color cur_color = get_color(window, x,y);
-                float dist = (cen_color.r - cur_color.r) * (cen_color.r - cur_color.r) +  (cen_color.g - cur_color.g) * (cen_color.g - cur_color.g) + (cen_color.b - cur_color.b) * (cen_color.b - cur_color.b);
+                float dist = (cur_color.r - cen_color.r) * (cur_color.r - cen_color.r) +  (cur_color.g - cen_color.g) * (cur_color.g - cen_color.g) + (cur_color.b - cen_color.b) * (cur_color.b - cen_color.b);
                 if(dist < min_dist){
                     min_color = cur_color;
                     min_dist = dist;
@@ -307,6 +368,74 @@ void median(Image* image, int wind_size){
         }
     }
 
+    destroy_image(window);
+    destroy_image(temp);
+}
+
+void median_by_channel(Image* image, int wind_size){
+    clock_t timer;
+    timer = clock();
+    if (!image || !image->data) return;
+
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+
+    Image *temp = create_image(w, h);
+    if (!temp){
+        return;
+    }
+
+    Image* window = create_image(wind_size, wind_size);
+    if (!window){
+        destroy_image(temp);
+        return;
+    }
+    unsigned int window_side = window->width;
+    unsigned int pixel_count = window_side*window_side;
+
+    float r_vals[pixel_count];
+    float g_vals[pixel_count];
+    float b_vals[pixel_count];
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+            get_window(window, x, y, image);
+
+            unsigned int count = 0;
+            for(int y = 0; y < window_side; y++){
+                for(int x = 0; x < window_side; x++){
+                    Color cur_color = get_color(window, x, y);
+                    r_vals[count] = cur_color.r;
+                    g_vals[count] = cur_color.g;
+                    b_vals[count] = cur_color.b;
+                    count++;
+                }
+            }
+
+            int k = count /2;
+
+            float median_red = quick_select(r_vals, 0, count-1, k);
+            float median_green = quick_select(g_vals, 0, count-1, k);
+            float median_blue = quick_select(b_vals, 0, count-1, k);
+
+            Color med = {median_red, median_green,median_blue};
+            printf("Median found: (%u, %u)\n", x, y);
+            limit_color(&med);
+            set_color(temp, x, y, med);
+
+        }
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+            set_color(image, x, y, get_color(temp, x, y));
+        }
+    }
+    timer = clock() - timer;
+
+    double time_taken = ((double)timer) / CLOCKS_PER_SEC;
+    printf("It was %f seconds\n", time_taken);
     destroy_image(window);
     destroy_image(temp);
 }

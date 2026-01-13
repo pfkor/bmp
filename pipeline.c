@@ -53,7 +53,7 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case SHARP:   matrix_sharpening(image); break;
     case EDGE:   edge(image, currFilter.params.edge.threshold); break;
 
-    case MED:    median(image, currFilter.params.median.window);
+    case MED:    median_by_channel(image, currFilter.params.median.window);
 
     default: break;
     }

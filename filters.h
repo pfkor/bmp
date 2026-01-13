@@ -41,6 +41,7 @@ void multiply_channels(Image* image, float r_factor, float g_factor, float b_fac
 void matrix_sharpening(Image* image);
 void edge(Image* image, float threshold);
 void median(Image* image, int wind_size);
+void median_by_channel(Image* image, int wind_size);
 
 void negative (Image *image);
 void monochrome (Image *image);
