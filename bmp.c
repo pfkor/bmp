@@ -68,28 +68,32 @@ Image* load_bmp(const char *filepath){
         return NULL;
     }
 
-    // if (buffer.bmp.id != 0x4D42){
-    //     fprintf(stderr, "Not valid BMP!\n");
-    //     fclose(input);
-    //     return NULL;
-    // }
+    if (buffer.bmp.id != 0x4D42){
+        fprintf(stderr, "Not valid BMP!\n");
+        fclose(input);
+        return NULL;
+    }
 
     if (buffer.dib.bits != 24){
+        fprintf(stderr, "Not 24 bits!\n");
         fclose(input);
         return NULL;
     }
 
     if (buffer.dib.compression != 0){
+        fprintf(stderr, "Not null compression!\n");
         fclose(input);
         return NULL;
     }
 
     if (buffer.dib.planes != 1){
+        fprintf(stderr, "Not single plane!\n");
         fclose(input);
         return NULL;
     }
 
     if (buffer.dib.width == 0 || buffer.dib.height == 0){
+        fprintf(stderr, "Incorrect size of image!\n");
         fclose(input);
         return NULL;
     }

@@ -19,6 +19,12 @@
 
 swap(float);
 
+#ifdef _WIN32
+    #define CLEAR_CONSOLE "cls"
+#else
+    #define CLEAR_CONSOLE "clear"
+#endif
+
 //Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*)) {
 //    Filter new_filter;
 //   new_filter.Type = Type;
@@ -398,6 +404,8 @@ void median_by_channel(Image* image, int wind_size){
     float g_vals[pixel_count];
     float b_vals[pixel_count];
 
+    int checkpoint = h/20;
+
     for (unsigned int y = 0; y < h; y++){
         for (unsigned int x = 0; x < w; x++){
             get_window(window, x, y, image);
@@ -420,7 +428,14 @@ void median_by_channel(Image* image, int wind_size){
             float median_blue = quick_select(b_vals, 0, count-1, k);
 
             Color med = {median_red, median_green,median_blue};
-            printf("Median found: (%u, %u)\n", x, y);
+            // printf("Median found: (%u, %u)\n", x, y);
+            if (x == 0 && y % checkpoint == 0){
+                system(CLEAR_CONSOLE);
+                printf("Median processing: [");
+                for (int i = 0; i < (int)(100*y/h); i++) printf("#");
+                for (int i = (int)(100*y/h); i < 100; i++) printf(".");
+                printf("] %d%%\n", (int)(100*y/h));                
+            }
             limit_color(&med);
             set_color(temp, x, y, med);
 
@@ -434,6 +449,11 @@ void median_by_channel(Image* image, int wind_size){
     }
     timer = clock() - timer;
 
+    system(CLEAR_CONSOLE);
+    printf("Median processing: [");
+    for (int i = 0; i < 100; i++) printf("#");
+    printf("] 100%%\n");
+    
     double time_taken = ((double)timer) / CLOCKS_PER_SEC;
     printf("It was %f seconds\n", time_taken);
     destroy_image(window);

@@ -32,9 +32,8 @@ typedef struct {
     FilterParams params;
 }Filter;
 
-Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*));
-
-void all_pixel_proccess(Image* image, void (*pixel_func)(Color*));
+// Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*));
+// void all_pixel_proccess(Image* image, void (*pixel_func)(Color*));
 
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to);
 void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
