@@ -10,6 +10,10 @@
 
 #include "bmp.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define swap(type) \
     type swap_ ## type(type* a, type* b) { \
         int temp = *a;\
@@ -160,7 +164,7 @@ void get_window(Image *window, unsigned int x, unsigned int y, Image *image){
         }
     }
 }
-Color impose_matrix(Image *window, int *matrix,  int size){
+Color impose_matrix(Image *window, float *matrix,  int size){
     if (!window || !window->data) return (Color){0, 0, 0};
     Color res = {0, 0, 0};
     
@@ -176,6 +180,7 @@ Color impose_matrix(Image *window, int *matrix,  int size){
     limit_color(&res);
     return res;
 }
+
 void matrix_sharpening(Image* image){
 
     if (!image || !image->data) return;
@@ -184,8 +189,7 @@ void matrix_sharpening(Image* image){
     unsigned int h = image->height;
 
 
-    int kernel[9] = {0, -1, 0, -1, 5, -1, 0, -1, 0};
-
+    float kernel[9] = {0, -1, 0, -1, 5, -1, 0, -1, 0};
 
     Image *temp = create_image(w, h);
     if (!temp){
@@ -219,6 +223,78 @@ void matrix_sharpening(Image* image){
     destroy_image(temp);
 }
 
+void gaussian_blur(Image *image, float sigma){
+    if (!image || !image->data) return;
+    clock_t timer;
+    timer = clock();
+
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+    // int kernel_size = 2 * (int)ceil(sigma*3) + 1;
+    int kernel_size = 7;
+
+    float *kernel = malloc(sizeof(float) * kernel_size * kernel_size);
+    if (!kernel) return;
+
+    int center = kernel_size/2;
+    float sum = 0.0;
+
+    for (int i = 0; i < kernel_size; i++){
+        for (int j = 0; j < kernel_size; j++){
+            int x = i - center;
+            int y = j - center;
+
+            // G(x, y) = (1 / (2πσ²)) × exp(-(x² + y²) / (2σ²))          
+            float exponent = -(x*x + y*y) / (2*sigma*sigma);  
+            float value = exp(exponent) / (2*M_PI*sigma*sigma);
+
+            kernel[i*kernel_size + j] = value;
+            sum += value;
+        }
+    }
+    for (int i = 0; i < kernel_size * kernel_size; i++) kernel[i] /= sum;
+
+    Image *temp = create_image(w, h);
+    if (!temp){
+        free(kernel);
+        return;
+    }
+
+    Image *window = create_image(kernel_size, kernel_size);
+    if (!window){
+        free(kernel);
+        destroy_image(temp);
+        return;
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+
+            get_window(window, x, y, image);
+            Color sum = impose_matrix(window, kernel, kernel_size);
+            limit_color(&sum);
+
+            set_color(temp, x, y, sum);
+        }
+        // if (y % 256 == 0) printf("%d/%d\n", y, h);
+    }
+
+    for (unsigned int y = 0; y < h; y++){
+        for (unsigned int x = 0; x < w; x++){
+            set_color(image, x, y, get_color(temp, x, y));
+        }
+    }
+
+    timer = clock() - timer;
+    double time_taken = ((double)timer) / CLOCKS_PER_SEC;
+    printf("It was %f seconds\n", time_taken);
+
+    free(kernel);
+    destroy_image(temp);
+    destroy_image(window);
+}
+
 void edge(Image* image, float threshold){
     if (!image || !image->data) return;
 
@@ -227,7 +303,7 @@ void edge(Image* image, float threshold){
     unsigned int h = image->height;
 
 
-    int kernel[9] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
+    float kernel[9] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
 
 
     Image *temp = create_image(w, h);
