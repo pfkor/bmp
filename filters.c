@@ -526,17 +526,33 @@ void median_by_channel(Image* image, int wind_size){
 }
 
 void kmeans_cluster(Image* image, int k, int itters){
+    
     srand(time(NULL));
     unsigned int pixel_count = image->width * image->height;
     float tolerance = 1;
 
     int* labels = malloc(pixel_count * sizeof(int));
-    Color centroids[k];
-    double* red_avg = calloc(k,sizeof(double));
-    double* green_avg= calloc(k,sizeof(double ));
-    double* blue_avg= calloc(k, sizeof(double ));
-    int* labeled_count = calloc(k, sizeof(int));
+    if (!labels) return;
 
+    Color *centroids = malloc(sizeof(Color) * k);
+    if (!centroids){
+        free(labels);
+        return;
+    }
+
+    double* red_avg = malloc(sizeof(double) * k); 
+    double* green_avg = malloc(sizeof(double) * k);
+    double* blue_avg = malloc(sizeof(double) * k);
+    int* labeled_count = malloc(sizeof(int) * k);
+
+    if (!red_avg || !green_avg || !blue_avg || !labeled_count){
+        free(labels);
+        free(centroids);
+        if (red_avg) free(red_avg);
+        if (green_avg) free(green_avg);
+        if (blue_avg) free(blue_avg);
+        if (labeled_count) free(labeled_count);
+    }
 
     for(int i = 0; i < k; i++){
         int random_x = rand() % image->width;
@@ -548,30 +564,27 @@ void kmeans_cluster(Image* image, int k, int itters){
 
         for(int y = 0; y < image->height; y++){
             for(int x = 0; x < image->width; x++){
-                Color cur_pixel = get_color(image,x,y);
-                float min_dist = HUGE_VALF;
-                int min_ind = 0;
-                for(int i = 0; i < k; i++){
-                    float dist = (cur_pixel.r - centroids[i].r) * (cur_pixel.r - centroids[i].r) + (cur_pixel.g - centroids[i].g) * (cur_pixel.g - centroids[i].g) + (cur_pixel.b - centroids[i].b) * (cur_pixel.b - centroids[i].b);
-                    if(dist < min_dist){
-                        min_dist = dist;
-                        min_ind = i;
-                    }
-                }
+
+                Color cur_color = get_color(image,x,y);
+                int min_idx = get_nearest(cur_color, centroids, k);
+
                 int pixel_number = y * image->width + x;
-                labels[pixel_number] = min_ind;
+                labels[pixel_number] = min_idx;
             }
         }
 
         for(int y = 0; y < image->height; y++){
             for(int x = 0; x < image->width; x++){
-                Color cur_pixel = get_color(image,x,y);
+
+                Color cur_color = get_color(image,x,y);
                 int pixel_number = y * image->width + x;
                 int cur_label = labels[pixel_number]++;
+                
                 labeled_count[cur_label]++;
-                red_avg[cur_label] += cur_pixel.r;
-                green_avg[cur_label] += cur_pixel.g;
-                blue_avg[cur_label] += cur_pixel.b;
+                
+                red_avg[cur_label] += cur_color.r;
+                green_avg[cur_label] += cur_color.g;
+                blue_avg[cur_label] += cur_color.b;
             }
         }
 
@@ -579,21 +592,28 @@ void kmeans_cluster(Image* image, int k, int itters){
             float new_r = red_avg[i] / labeled_count[i];
             float new_g = green_avg[i] / labeled_count[i];
             float new_b = blue_avg[i] / labeled_count[i];
+
             centroids[i] = (Color){new_r,new_g,new_b};
         }
 
     }
+    
     for(int y = 0; y < image->height; y++){
         for(int x = 0; x < image->width; x++){
-            int cur_pixel_num = y * image->width + x;
-            Color new_color = centroids[labels[cur_pixel_num]];
+
+            int cur_color_num = y * image->width + x;
+            Color new_color = centroids[labels[cur_color_num]];
             set_color(image, x, y,new_color);
         }
     }
+
     free(labels);
+    free(centroids);
+    
     free(red_avg);
     free(green_avg);
     free(blue_avg);
+    
     free(labeled_count);
 }
 

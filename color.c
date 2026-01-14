@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "color.h"
 
@@ -24,3 +25,22 @@ void limit_color (Color *color){
     if (color->b > 255) color->b = 255;
 }
 
+float get_distance(Color from, Color to){
+    float r = from.r - to.r;
+    float g = from.g - to.g;
+    float b = from.b - to.b;
+    return sqrtf(r*r + g*g + b*b);
+}
+
+int get_nearest(Color main, Color *arr, int len){
+    float dist, min_dist = HUGE_VALF;
+    int idx = 0;
+    for (int i = 0; i < len; i++){
+        dist = get_distance(main, arr[i]);
+        if (dist < min_dist){
+            min_dist = dist;
+            idx = i;
+        }
+    }
+    return idx;
+}
