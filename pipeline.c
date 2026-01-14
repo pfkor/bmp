@@ -51,9 +51,11 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case CROP:    crop(image, 0, currFilter.params.crop.width, 0, currFilter.params.crop.height); break;
 
     case SHARP:   matrix_sharpening(image); break;
-    case EDGE:   edge(image, currFilter.params.edge.threshold); break;
+    case EDGE:    edge(image, currFilter.params.edge.threshold); break;
 
-    case MED:    median_by_channel(image, currFilter.params.median.window);
+    case MED:     median_by_channel(image, currFilter.params.median.window);
+
+    case BLUR:    gaussian_blur(image, currFilter.params.blur.sigma);
 
     case CLUSTER: kmeans_cluster(image, currFilter.params.cluster.k,  currFilter.params.cluster.itters);
 

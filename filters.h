@@ -5,7 +5,7 @@
 typedef enum {
     COPY, CROP, FLIP_H, FLIP_V, FLIP_BOTH,
     RED, GREEN, BLUE, NEG, YELLOW, CYAN, MAGENTA, GS,
-    SHARP, EDGE, MED, CLUSTER
+    SHARP, EDGE, MED, CLUSTER, BLUR
 } FilterType;
 
 typedef union {
@@ -41,8 +41,12 @@ typedef struct {
 
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to);
 void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
+
 void matrix_sharpening(Image* image);
+void gaussian_blur(Image* image, float sigma);
+
 void edge(Image* image, float threshold);
+
 void median(Image* image, int wind_size);
 void median_by_channel(Image* image, int wind_size);
 void kmeans_cluster(Image* image, int k, int itters);

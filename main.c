@@ -85,6 +85,10 @@ int main(int argn, char *args[]){
                 return 1;
             }
         }
+        else if (strcmp(args[i], "-blur") == 0){
+            cur_filter.Type = BLUR;
+            cur_filter.params.blur.sigma = atof(args[++i]);
+        }
         else if (strcmp(args[i], "-cluster") == 0){
             if(i + 2 < argn){
                 cur_filter.Type = CLUSTER;
