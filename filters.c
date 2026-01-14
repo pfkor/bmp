@@ -239,7 +239,6 @@ void gaussian_blur(Image *image, float sigma){
 
     int center = kernel_size/2;
     float sum = 0.0;
-
     for (int i = 0; i < kernel_size; i++){
         for (int j = 0; j < kernel_size; j++){
             int x = i - center;
@@ -260,7 +259,6 @@ void gaussian_blur(Image *image, float sigma){
         free(kernel);
         return;
     }
-
     Image *window = create_image(kernel_size, kernel_size);
     if (!window){
         free(kernel);
@@ -279,7 +277,6 @@ void gaussian_blur(Image *image, float sigma){
         }
         // if (y % 256 == 0) printf("%d/%d\n", y, h);
     }
-
     for (unsigned int y = 0; y < h; y++){
         for (unsigned int x = 0; x < w; x++){
             set_color(image, x, y, get_color(temp, x, y));
@@ -293,6 +290,7 @@ void gaussian_blur(Image *image, float sigma){
     free(kernel);
     destroy_image(temp);
     destroy_image(window);
+
 }
 
 void edge(Image* image, float threshold){

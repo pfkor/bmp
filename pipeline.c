@@ -53,11 +53,12 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case SHARP:   matrix_sharpening(image); break;
     case EDGE:    edge(image, currFilter.params.edge.threshold); break;
 
-    case MED:     median_by_channel(image, currFilter.params.median.window);
+    case MED:     median_by_channel(image, currFilter.params.median.window); break;
 
-    case BLUR:    gaussian_blur(image, currFilter.params.blur.sigma);
+    case BLUR:    gaussian_blur(image, currFilter.params.blur.sigma); break;
 
-    case CLUSTER: kmeans_cluster(image, currFilter.params.cluster.k,  currFilter.params.cluster.itters);
+
+    case CLUSTER: kmeans_cluster(image, currFilter.params.cluster.k,  currFilter.params.cluster.itters); break;
 
 
 
