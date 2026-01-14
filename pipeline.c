@@ -55,6 +55,10 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
 
     case MED:    median_by_channel(image, currFilter.params.median.window);
 
+    case CLUSTER: kmeans_cluster(image, currFilter.params.cluster.k,  currFilter.params.cluster.itters);
+
+
+
     default: break;
     }
   }

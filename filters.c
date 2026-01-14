@@ -12,7 +12,7 @@
 
 #define swap(type) \
     type swap_ ## type(type* a, type* b) { \
-        int temp = *a;\
+        type temp = *a;\
         *a = *b;\
         *b = temp;\
     }
@@ -301,19 +301,8 @@ static float quick_select(float arr[], int left, int right, int k){
 
 }
 
-static float quick_select_small(float arr[], int n, int k) {
-    // Для малых n (≤49) проще использовать частичную сортировку
-    for (int i = 0; i <= k; i++) {
-        int min_idx = i;
-        for (int j = i + 1; j < n; j++) {
-            if (arr[j] < arr[min_idx]) min_idx = j;
-        }
-        float tmp = arr[i];
-        arr[i] = arr[min_idx];
-        arr[min_idx] = tmp;
-    }
-    return arr[k];
-}
+
+
 
 static Color median_color(Image* window){
     unsigned int window_side = window->height;
@@ -460,6 +449,77 @@ void median_by_channel(Image* image, int wind_size){
     destroy_image(temp);
 }
 
+void kmeans_cluster(Image* image, int k, int itters){
+    srand(time(NULL));
+    unsigned int pixel_count = image->width * image->height;
+    float tolerance = 1;
+
+    int* labels = malloc(pixel_count * sizeof(int));
+    Color centroids[k];
+    double* red_avg = calloc(k,sizeof(double));
+    double* green_avg= calloc(k,sizeof(double ));
+    double* blue_avg= calloc(k, sizeof(double ));
+    int* labeled_count = calloc(k, sizeof(int));
+
+
+    for(int i = 0; i < k; i++){
+        int random_x = rand() % image->width;
+        int random_y = rand() % image->height;
+        centroids[i] = get_color(image, random_x, random_y);
+    }
+
+    for(int j = 0; j < itters; j++){
+
+        for(int y = 0; y < image->height; y++){
+            for(int x = 0; x < image->width; x++){
+                Color cur_pixel = get_color(image,x,y);
+                float min_dist = HUGE_VALF;
+                int min_ind = 0;
+                for(int i = 0; i < k; i++){
+                    float dist = (cur_pixel.r - centroids[i].r) * (cur_pixel.r - centroids[i].r) + (cur_pixel.g - centroids[i].g) * (cur_pixel.g - centroids[i].g) + (cur_pixel.b - centroids[i].b) * (cur_pixel.b - centroids[i].b);
+                    if(dist < min_dist){
+                        min_dist = dist;
+                        min_ind = i;
+                    }
+                }
+                int pixel_number = y * image->width + x;
+                labels[pixel_number] = min_ind;
+            }
+        }
+
+        for(int y = 0; y < image->height; y++){
+            for(int x = 0; x < image->width; x++){
+                Color cur_pixel = get_color(image,x,y);
+                int pixel_number = y * image->width + x;
+                int cur_label = labels[pixel_number]++;
+                labeled_count[cur_label]++;
+                red_avg[cur_label] += cur_pixel.r;
+                green_avg[cur_label] += cur_pixel.g;
+                blue_avg[cur_label] += cur_pixel.b;
+            }
+        }
+
+        for(int i = 0; i < k; i++){
+            float new_r = red_avg[i] / labeled_count[i];
+            float new_g = green_avg[i] / labeled_count[i];
+            float new_b = blue_avg[i] / labeled_count[i];
+            centroids[i] = (Color){new_r,new_g,new_b};
+        }
+
+    }
+    for(int y = 0; y < image->height; y++){
+        for(int x = 0; x < image->width; x++){
+            int cur_pixel_num = y * image->width + x;
+            Color new_color = centroids[labels[cur_pixel_num]];
+            set_color(image, x, y,new_color);
+        }
+    }
+    free(labels);
+    free(red_avg);
+    free(green_avg);
+    free(blue_avg);
+    free(labeled_count);
+}
 
 
 
