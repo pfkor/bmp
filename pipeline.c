@@ -26,16 +26,16 @@ void add_filter(FilterPipeline* pipeline, Filter filter){
 
 Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
   for(int i = 0; i < pipeline->count; i++){
-    Filter currFilter = pipeline->filters[i];
+    Filter curFilter = pipeline->filters[i];
 
-    //   switch (currFilter.Type) {
+    //   switch (curFilter.Type) {
     //       // фильтры с проходом по всем пикселям без аргументов
     //       case RED: case BLUE: case GREEN: case NEG: case YELLOW: case CYAN: case MAGENTA: case GS:
-    //           all_pixel_proccess( image,currFilter.params.pixelFunc);
+    //           all_pixel_proccess( image,curFilter.params.pixelFunc);
     //           break;
     //   }
     
-    switch (currFilter.Type) {
+    switch (curFilter.Type) {
       
     case RED:     multiply_channels(image, 1, 0, 0); break;
     case GREEN:   multiply_channels(image, 0, 1, 0); break;
@@ -48,19 +48,19 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case NEG:     negative(image); break;
     case GS:      monochrome(image); break;
 
-    case CROP:    crop(image, 0, currFilter.params.crop.width, 0, currFilter.params.crop.height); break;
+    case CROP:    crop(image, 0, curFilter.params.crop.width, 0, curFilter.params.crop.height); break;
 
     case SHARP:   matrix_sharpening(image); break;
-    case EDGE:    edge(image, currFilter.params.edge.threshold); break;
+    case EDGE:    edge(image, curFilter.params.edge.threshold); break;
 
-    case MED:     median_by_channel(image, currFilter.params.median.window); break;
+    case MED:     median_by_channel(image, curFilter.params.median.window); break;
 
-    case BLUR:    gaussian_blur(image, currFilter.params.blur.sigma); break;
-
-
-    case CLUSTER: kmeans_cluster(image, currFilter.params.cluster.k,  currFilter.params.cluster.itters); break;
+    case BLUR:    gaussian_blur(image, curFilter.params.blur.sigma); break;
 
 
+    case CLUSTER: kmeans_cluster(image, curFilter.params.cluster.k,  curFilter.params.cluster.itters); break;
+
+    case MOSAIC:  average_tiles(image, curFilter.params.mosaic.tile_size); break;
 
     default: break;
     }

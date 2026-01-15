@@ -5,7 +5,8 @@
 typedef enum {
     COPY, CROP, FLIP_H, FLIP_V, FLIP_BOTH,
     RED, GREEN, BLUE, NEG, YELLOW, CYAN, MAGENTA, GS,
-    SHARP, EDGE, MED, CLUSTER, BLUR
+    SHARP, EDGE, MED, CLUSTER, BLUR,
+    MOSAIC
 } FilterType;
 
 typedef union {
@@ -26,6 +27,9 @@ typedef union {
         int k;
         int itters;
     } cluster;
+    struct {
+        int tile_size;
+    } mosaic;
     struct {
         char dummy;  // Заглушка для фильтров без параметров
     } none;
@@ -53,3 +57,5 @@ void kmeans_cluster(Image* image, int k, int itters);
 
 void negative (Image *image);
 void monochrome (Image *image);
+
+void average_tiles(Image *image, int tile_width);
