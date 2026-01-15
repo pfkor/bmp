@@ -42,9 +42,11 @@ typedef struct {
 
 Image* create_image(unsigned int width, unsigned int height);
 void destroy_image(Image *image);
+Color* image_to_line_arr(Image *image);
 
 Image* load_bmp(const char *filepath);
 void save_bmp(const char *filepath, Image *image);
 
 Color get_color(Image *image, int x, int y);
 void set_color(Image *image, int x, int y, Color color);
+

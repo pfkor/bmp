@@ -29,6 +29,10 @@ swap(float);
     #define CLEAR_CONSOLE "clear"
 #endif
 
+#define FREE_IF_NEEDED(ptr) \
+  if(ptr) free(ptr);
+
+
 //Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*)) {
 //    Filter new_filter;
 //   new_filter.Type = Type;
@@ -356,8 +360,6 @@ static int partition(float arr[], int left, int right, int pivot_index) {
     swap_float(&arr[store_index], &arr[right]); // store_index будет именно там где граница между маленькими и большими
     return store_index;
 }
-
-
 static float quick_select(float arr[], int left, int right, int k){
     while (left < right) {
         int pivot_index = left + rand() % (right - left + 1);
@@ -374,9 +376,6 @@ static float quick_select(float arr[], int left, int right, int k){
     return arr[left];
 
 }
-
-
-
 
 static Color median_color(Image* window){
     unsigned int window_side = window->height;
@@ -401,46 +400,6 @@ static Color median_color(Image* window){
 
 
 }
-
-void median(Image* image, int wind_size){
-    if (!image || !image->data) return;
-
-    unsigned int w = image->width;
-    unsigned int h = image->height;
-
-
-    Image *temp = create_image(w, h);
-    if (!temp){
-        return;
-    }
-
-    Image *window = create_image(wind_size, wind_size);
-    if (!window){
-        destroy_image(temp);
-        return;
-    }
-
-    for (unsigned int y = 0; y < h; y++){
-        for (unsigned int x = 0; x < w; x++){
-
-            get_window(window, x, y, image);
-            Color med = median_color(window);
-            limit_color(&med);
-
-            set_color(temp, x, y, med);
-        }
-    }
-
-    for (unsigned int y = 0; y < h; y++){
-        for (unsigned int x = 0; x < w; x++){
-            set_color(image, x, y, get_color(temp, x, y));
-        }
-    }
-
-    destroy_image(window);
-    destroy_image(temp);
-}
-
 void median_by_channel(Image* image, int wind_size){
     clock_t timer;
     timer = clock();
@@ -523,33 +482,98 @@ void median_by_channel(Image* image, int wind_size){
     destroy_image(temp);
 }
 
-void kmeans_cluster(Image* image, int k, int itters){
-    
-    srand(time(NULL));
+static Color select_centroid(Image* image, Color* centroid, int len){
+    printf("Centroid selection started len: %d\n", len);
+    Color res_centroid = {0,0,0};
+    unsigned int h = image->height;
+    unsigned int w = image->width;
     unsigned int pixel_count = image->width * image->height;
-    float tolerance = 1;
+    double** distances = malloc(image->height * sizeof(double* ));
+    for(int n = 0; n < image->height; n++){
+        distances[n] = calloc(image->width,sizeof(double ));
+    }
+    printf("Mallocs are ok\n");
 
-    int* labels = malloc(pixel_count * sizeof(int));
-    if (!labels) return;
 
-    Color *centroids = malloc(sizeof(Color) * k);
-    if (!centroids){
-        free(labels);
-        return;
+    for(int y = 0; y < h; y++){
+        for(int x = 0; x < w; x++){
+            Color cur_color = get_color(image,x,y);
+            double near_center_dist = get_distance(cur_color, centroid[get_nearest(cur_color, centroid, len)]);
+            distances[y][x] = near_center_dist;
+
+        }
+    }
+    printf("Distances counted\n");
+    double total = 0;
+    for(int y = 0; y < image->height; y++){
+        for(int x = 0; x < image->width; x++){
+            total+=distances[y][x];
+        }
+    }
+    printf("Total counted\n");
+    if(total == 0){
+        int rand_x = rand() % image->width;
+        int rand_y = rand() % image->height;
+        res_centroid = get_color(image,rand_x, rand_y);
+    }
+    unsigned int r = rand() % (int)(total + 1);
+
+    double cumulative =0;
+    for(int y = 0; y < image->height; y++){
+        for(int x = 0; x < image->width; x++){
+            cumulative += distances[y][x];
+            if(cumulative > r){
+                res_centroid = get_color(image, x, y);
+            }
+        }
+    }
+    printf("Finishing\n");
+    for(int n = 0; n < image->height; n++){
+        free(distances[n]);
+    }
+    free(distances);
+    printf("centroid done: %f %f %f\n", res_centroid.r, res_centroid.g, res_centroid.b);
+
+    return res_centroid;
+}
+
+void kmeans_cluster(Image* image, int k, int iters){
+    srand(time(NULL));
+    unsigned int w = image->height;
+    unsigned int h = image->width;
+    int tolerance = 1;
+
+    Color* centroids = malloc(k * sizeof(Color));
+    Color* new_centroids = malloc(k * sizeof(Color));
+
+    double* red_avg = malloc(sizeof(double) * k);
+    double* green_avg = malloc(sizeof(double) * k);
+    double* blue_avg =  malloc(sizeof(double) * k);
+    int* labeled_count =  malloc(sizeof(int) * k);
+
+    int** centroid_labels = malloc(h * sizeof(int*));
+    char rows_alloced = 1;
+    for(int i = 0; i < h; i++){
+        centroid_labels[i] = malloc(w * sizeof(int));
+        if(!centroid_labels[i]) rows_alloced = 0;
     }
 
-    double* red_avg = malloc(sizeof(double) * k); 
-    double* green_avg = malloc(sizeof(double) * k);
-    double* blue_avg = malloc(sizeof(double) * k);
-    int* labeled_count = malloc(sizeof(int) * k);
+    if(!centroids || !new_centroids || !red_avg || !green_avg || !blue_avg || !labeled_count || !centroid_labels || !rows_alloced){
+        printf("Clutster filter: allocation failed\n");
+            if(!rows_alloced){
+                for(int i = 0; i < h; i++){
+                    free(centroid_labels[i]);
+                }
+            }
+        FREE_IF_NEEDED(centroids);
+        FREE_IF_NEEDED(new_centroids);
+        FREE_IF_NEEDED(red_avg);
+        FREE_IF_NEEDED(green_avg);
+        FREE_IF_NEEDED(blue_avg);
+        FREE_IF_NEEDED(labeled_count);
+        FREE_IF_NEEDED(centroid_labels);
+        return;
 
-    if (!red_avg || !green_avg || !blue_avg || !labeled_count){
-        free(labels);
-        free(centroids);
-        if (red_avg) free(red_avg);
-        if (green_avg) free(green_avg);
-        if (blue_avg) free(blue_avg);
-        if (labeled_count) free(labeled_count);
     }
 
     for(int i = 0; i < k; i++){
@@ -558,62 +582,67 @@ void kmeans_cluster(Image* image, int k, int itters){
         centroids[i] = get_color(image, random_x, random_y);
     }
 
-    for(int j = 0; j < itters; j++){
+    for(int n =  0; n < iters; n++){
+        memset(red_avg, 0, k * sizeof(double));
+        memset(green_avg, 0, k * sizeof(double));
+        memset(blue_avg, 0, k * sizeof(double));
+        memset(labeled_count, 0, k * sizeof(int));
 
-        for(int y = 0; y < image->height; y++){
-            for(int x = 0; x < image->width; x++){
+        for(int y = 0; y < h; y++){
+            for(int x = 0; x < w; x++){
+                Color cur_color = get_color(image, x, y);
+                int cur_label = get_nearest(cur_color, centroids, k);
+                centroid_labels[y][x] = cur_label;
 
-                Color cur_color = get_color(image,x,y);
-                int min_idx = get_nearest(cur_color, centroids, k);
-
-                int pixel_number = y * image->width + x;
-                labels[pixel_number] = min_idx;
-            }
-        }
-
-        for(int y = 0; y < image->height; y++){
-            for(int x = 0; x < image->width; x++){
-
-                Color cur_color = get_color(image,x,y);
-                int pixel_number = y * image->width + x;
-                int cur_label = labels[pixel_number]++;
-                
                 labeled_count[cur_label]++;
-                
                 red_avg[cur_label] += cur_color.r;
                 green_avg[cur_label] += cur_color.g;
                 blue_avg[cur_label] += cur_color.b;
             }
         }
-
+        char centrs_changed = 1;
         for(int i = 0; i < k; i++){
-            float new_r = red_avg[i] / labeled_count[i];
-            float new_g = green_avg[i] / labeled_count[i];
-            float new_b = blue_avg[i] / labeled_count[i];
-
-            centroids[i] = (Color){new_r,new_g,new_b};
+            int cur_labeled_count = labeled_count[i];
+            if(cur_labeled_count == 0){
+                printf("zero division detected");
+            }
+            new_centroids[i] = (Color){red_avg[i]/cur_labeled_count, green_avg[i]/cur_labeled_count, blue_avg[i]/cur_labeled_count};
+            float dist = get_distance(centroids[i], new_centroids[i]);
+            if(dist < tolerance){
+                centrs_changed = 0;
+            }
+        }
+        if(centrs_changed){
+            memcpy(centroids, new_centroids, k * sizeof(Color));
+            memset(new_centroids, 0, k * sizeof(Color));
+        }
+        else{
+            break;
         }
 
+
     }
-    
     for(int y = 0; y < image->height; y++){
         for(int x = 0; x < image->width; x++){
-
-            int cur_color_num = y * image->width + x;
-            Color new_color = centroids[labels[cur_color_num]];
-            set_color(image, x, y,new_color);
+            int cur_label = centroid_labels[y][x];
+            Color centr_color = centroids[cur_label];
+            set_color(image, x, y, centr_color);
         }
     }
 
-    free(labels);
     free(centroids);
-    
+    free(new_centroids);
     free(red_avg);
     free(green_avg);
     free(blue_avg);
-    
     free(labeled_count);
+    for(int i = 0; i < h; i++){
+        free(centroid_labels[i]);
+    }
+    free(centroid_labels);
+
 }
+
 
 
 
