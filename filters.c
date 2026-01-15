@@ -645,4 +645,45 @@ void kmeans_cluster(Image* image, int k, int iters){
 
 
 
+Color get_average(Image *image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
+    if (!image || !image->data) return (Color){0, 0, 0};
+    unsigned int sum_r = 0, sum_g = 0, sum_b = 0;
+    unsigned int c = 0;
 
+    unsigned int y_lim = (y_to >= image->height) ? image->height : y_to;
+    unsigned int x_lim = (x_to >= image->width) ? image->width : x_to;
+
+    for (unsigned int y = y_from; y < y_lim; y++){
+        for (unsigned int x = x_from; x < x_lim; x++){
+            Color cur = get_color(image, x, y);
+            sum_r += cur.r;
+            sum_g += cur.g;
+            sum_b += cur.b;
+            c++;
+        }
+    }
+    if (c == 0) return (Color){0, 0, 0};
+    Color res = {sum_r/c, sum_g/c, sum_b/c};
+    limit_color(&res);
+    return res;
+}
+
+
+void average_tiles(Image *image, int tile_size){
+    if (!image || !image->data) return;
+
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+    for (unsigned int y = 0; y <= h; y += tile_size){
+        for (unsigned int x = 0; x <= w; x += tile_size){
+
+            Color average = get_average(image, x, x+tile_size, y, y+tile_size);
+            for (int ky = 0; ky < tile_size; ky++){
+                for (int kx = 0; kx < tile_size; kx++){
+                    set_color(image, x+kx, y+ky, average);
+                }
+            }
+        }
+    }
+}

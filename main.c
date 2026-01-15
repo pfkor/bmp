@@ -97,7 +97,18 @@ int main(int argn, char *args[]){
                 i+=2;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter");
+                fprintf(stdout, "Wrong or no args for filter\n");
+                return 1;
+            }
+        }
+        else if (strcmp(args[i], "-mosaic") == 0){
+            if(i + 1 < argn){
+                cur_filter.Type = MOSAIC;
+                cur_filter.params.mosaic.tile_size = atoi(args[i+1]);
+                i++;
+            }
+            else{
+                fprintf(stdout, "Wrong or no args for filter\n");
                 return 1;
             }
         }
