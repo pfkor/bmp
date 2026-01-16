@@ -236,7 +236,7 @@ void gaussian_blur(Image *image, float sigma){
     unsigned int h = image->height;
 
     // int kernel_size = 2 * (int)ceil(sigma*3) + 1;
-    int kernel_size = 7;
+    int kernel_size = 3;
 
     float *kernel = malloc(sizeof(float) * kernel_size * kernel_size);
     if (!kernel) return;
@@ -645,6 +645,63 @@ void kmeans_cluster(Image* image, int k, int iters){
 
 
 
+void create_tiles(char *filepath, int tiles_number){
+    FILE *input = fopen(filepath, "rb");
+    if (!input){
+        fprintf(stderr, "Failed to open dataset file!\n");
+        return;
+    }
+
+    uint8_t skip, value;
+    Image *current = create_image(32, 32);
+    char *filename = malloc(sizeof(char) * 32);
+    if (!current){
+        fprintf(stderr, "Failed to allocate memory!\n");
+        fclose(input);
+        return;
+    }
+
+    for (int i = 0; i < tiles_number; i++){
+        if (fread(&skip, sizeof(uint8_t), 1, input) != 1) printf("Failed to skip a byte\n");
+
+        for (int y = 0; y < 32; y++){
+            for (int x = 0; x < 32; x++){
+                if (fread(&value, sizeof(uint8_t), 1, input) != 1){
+                    fprintf(stderr, "Failed to read red %d!\n", i);
+                    fclose(input);
+                    return;
+                }
+                current->data[y][x].r = value;
+            }
+        }
+        for (int y = 0; y < 32; y++){
+            for (int x = 0; x < 32; x++){
+                if (fread(&value, sizeof(uint8_t), 1, input) != 1){
+                    fprintf(stderr, "Failed to read green %d!\n", i);
+                    fclose(input);
+                    return;
+                }
+                current->data[y][x].g = value;
+            }
+        }
+        for (int y = 0; y < 32; y++){
+            for (int x = 0; x < 32; x++){
+                if (fread(&value, sizeof(uint8_t), 1, input) != 1){
+                    fprintf(stderr, "Failed to read blue %d!\n", i);
+                    fclose(input);
+                    return;
+                }
+                current->data[y][x].b = value;
+            }
+        }
+        sprintf(filename, "./tiles/%03d.bmp", i);
+        save_bmp(filename, current);
+    }
+
+    fclose(input);
+}
+
+
 Color get_average(Image *image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
     if (!image || !image->data) return (Color){0, 0, 0};
     unsigned int sum_r = 0, sum_g = 0, sum_b = 0;
@@ -686,4 +743,60 @@ void average_tiles(Image *image, int tile_size){
             }
         }
     }
+}
+
+void replace_tiles(Image *image, int tiles_number){
+    if (!image || !image->data) return;
+
+    int tile_size = 32;
+    Image *current = create_image(tile_size, tile_size);
+    char *filepath = malloc(sizeof(char) * 100);
+    if (!current){
+        fprintf(stderr, "Failed to allocate memory!\n");
+        if (current) free(current);
+        if (filepath) free(filepath);
+        return;
+    }
+
+    Color palette[tiles_number];
+
+    for (int i = 0; i < tiles_number; i++){
+        sprintf(filepath, "./tiles/%03d.bmp", i);
+        current = load_bmp(filepath);
+        if (!current){
+            fprintf(stderr, "Failed to load tile! %d\n", i);
+            free(filepath);
+            return;
+        }
+
+        palette[i] = get_average(current, 0, tile_size, 0, tile_size);    
+    }
+
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+
+    for (unsigned int y = 0; y <= h; y += tile_size){
+        for (unsigned int x = 0; x <= w; x += tile_size){
+
+            Color average = get_average(image, x, x+tile_size, y, y+tile_size);
+            int nearest_idx = get_nearest(average, palette, tiles_number);
+            
+            sprintf(filepath, "./tiles/%03d.bmp", nearest_idx);
+            current = load_bmp(filepath);
+            if (!current){
+                fprintf(stderr, "Failed to load tile! %d\n", nearest_idx);
+                free(filepath);
+                return;
+            }
+
+            for (int ky = 0; ky < tile_size; ky++){
+                for (int kx = 0; kx < tile_size; kx++){
+                    set_color(image, x+kx, y+ky, get_color(current, kx, ky));
+                }
+            }
+        }
+    }
+
+    free(current);
+    free(filepath);
 }
