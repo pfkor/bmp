@@ -53,7 +53,7 @@ void gaussian_blur(Image* image, float sigma);
 
 void edge(Image* image, float threshold);
 
-void median(Image* image, int wind_size);
+// void median(Image* image, int wind_size);
 void median_by_channel(Image* image, int wind_size);
 void kmeans_cluster(Image* image, int k, int itters);
 

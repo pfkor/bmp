@@ -235,8 +235,8 @@ void gaussian_blur(Image *image, float sigma){
     unsigned int w = image->width;
     unsigned int h = image->height;
 
-    // int kernel_size = 2 * (int)ceil(sigma*3) + 1;
-    int kernel_size = 3;
+    int kernel_size = 2 * (int)ceil(sigma*3) + 1;
+    // int kernel_size = 3;
 
     float *kernel = malloc(sizeof(float) * kernel_size * kernel_size);
     if (!kernel) return;
@@ -655,9 +655,11 @@ void create_tiles(char *filepath, int tiles_number){
     uint8_t skip, value;
     Image *current = create_image(32, 32);
     char *filename = malloc(sizeof(char) * 32);
-    if (!current){
+    if (!current || !filename){
         fprintf(stderr, "Failed to allocate memory!\n");
         fclose(input);
+        if (current) free(current);
+        if (filename) free(filename);
         return;
     }
 
@@ -669,6 +671,8 @@ void create_tiles(char *filepath, int tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read red %d!\n", i);
                     fclose(input);
+                    free(current);
+                    free(filename);
                     return;
                 }
                 current->data[y][x].r = value;
@@ -679,6 +683,8 @@ void create_tiles(char *filepath, int tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read green %d!\n", i);
                     fclose(input);
+                    free(current);
+                    free(filename);
                     return;
                 }
                 current->data[y][x].g = value;
@@ -689,6 +695,8 @@ void create_tiles(char *filepath, int tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read blue %d!\n", i);
                     fclose(input);
+                    free(current);
+                    free(filename);
                     return;
                 }
                 current->data[y][x].b = value;
@@ -698,6 +706,8 @@ void create_tiles(char *filepath, int tiles_number){
         save_bmp(filename, current);
     }
 
+    free(current);
+    free(filename);
     fclose(input);
 }
 
