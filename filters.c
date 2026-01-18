@@ -243,9 +243,6 @@ float* create_gaussian_kernel(float sigma, int* kernel_size) {
 int gaussian_blur(Image *image, float sigma){
     if (!image || !image->data) return 1;
 
-    clock_t timer;
-    timer = clock();
-
     unsigned int w = image->width;
     unsigned int h = image->height;
 
@@ -334,10 +331,6 @@ int gaussian_blur(Image *image, float sigma){
             set_color(image, x, y, result);
         }
     }
-
-    timer = clock() - timer;
-    double time_taken = ((double)timer) / CLOCKS_PER_SEC;
-    printf("Fast Gaussian blur took %f seconds\n", time_taken);
 
     free(kernel);
     destroy_image(temp);
