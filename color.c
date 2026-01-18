@@ -32,6 +32,19 @@ float get_distance(Color from, Color to){
     return r*r + g*g + b*b; // корень больно дорогой, я пока убрал, мы пока дистанцию вроде только для сравнений используем, если что добавим параметр.
 }
 
+float min_distance(Color main, Color *arr, int len){
+    float dist, min_dist = HUGE_VALF;
+    int idx = 0;
+    for (int i = 0; i < len; i++){
+        dist = get_distance(main, arr[i]);
+        if (dist < min_dist){
+            min_dist = dist;
+            idx = i;
+        }
+    }
+    return min_dist;
+}
+
 int get_nearest(Color main, Color *arr, int len){
     float dist, min_dist = HUGE_VALF;
     int idx = 0;

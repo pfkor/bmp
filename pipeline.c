@@ -58,7 +58,7 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
     case BLUR:    gaussian_blur(image, curFilter.params.blur.sigma); break;
 
 
-    case CLUSTER: kmeans_cluster(image, curFilter.params.cluster.k,  curFilter.params.cluster.itters); break;
+    case CLUSTER: kmeans_cluster(image, curFilter.params.cluster.centroids); break;
 
     case MOSAIC:  average_tiles(image, curFilter.params.mosaic.tile_size); break;
 

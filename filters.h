@@ -24,8 +24,7 @@ typedef union {
         float sigma;
     } blur;
     struct {
-        int k;
-        int itters;
+        int centroids;
     } cluster;
     struct {
         int tile_size;
@@ -53,7 +52,7 @@ void edge(Image* image, float threshold);
 
 void median(Image* image, int wind_size);
 void median_by_channel(Image* image, int wind_size);
-void kmeans_cluster(Image* image, int k, int itters);
+void kmeans_cluster(Image* image, int centr_c);
 
 void negative (Image *image);
 void monochrome (Image *image);

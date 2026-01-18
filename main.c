@@ -90,11 +90,10 @@ int main(int argn, char *args[]){
             cur_filter.params.blur.sigma = atof(args[++i]);
         }
         else if (strcmp(args[i], "-cluster") == 0){
-            if(i + 2 < argn){
+            if(i + 1 < argn){
                 cur_filter.Type = CLUSTER;
-                cur_filter.params.cluster.k = atoi(args[i+1]);
-                cur_filter.params.cluster.itters = atoi(args[i+2]);
-                i+=2;
+                cur_filter.params.cluster.centroids = atoi(args[i + 1]);
+                i++;
             }
             else{
                 fprintf(stdout, "Wrong or no args for filter\n");

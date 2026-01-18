@@ -482,74 +482,94 @@ void median_by_channel(Image* image, int wind_size){
     destroy_image(temp);
 }
 
-static Color select_centroid(Image* image, Color* centroid, int len){
-    printf("Centroid selection started len: %d\n", len);
-    Color res_centroid = {0,0,0};
+static Color* select_centroid(Image* image, Color* centroid, int k){
+    srand(time(NULL));
     unsigned int h = image->height;
     unsigned int w = image->width;
-    unsigned int pixel_count = image->width * image->height;
-    double** distances = malloc(image->height * sizeof(double* ));
-    for(int n = 0; n < image->height; n++){
-        distances[n] = calloc(image->width,sizeof(double ));
-    }
-    printf("Mallocs are ok\n");
-
-
-    for(int y = 0; y < h; y++){
-        for(int x = 0; x < w; x++){
-            Color cur_color = get_color(image,x,y);
-            double near_center_dist = get_distance(cur_color, centroid[get_nearest(cur_color, centroid, len)]);
-            distances[y][x] = near_center_dist;
-
-        }
-    }
-    printf("Distances counted\n");
+    int centrs_ready = 1;
     double total = 0;
-    for(int y = 0; y < image->height; y++){
-        for(int x = 0; x < image->width; x++){
-            total+=distances[y][x];
-        }
-    }
-    printf("Total counted\n");
-    if(total == 0){
-        int rand_x = rand() % image->width;
-        int rand_y = rand() % image->height;
-        res_centroid = get_color(image,rand_x, rand_y);
-    }
-    unsigned int r = rand() % (int)(total + 1);
 
-    double cumulative =0;
-    for(int y = 0; y < image->height; y++){
-        for(int x = 0; x < image->width; x++){
-            cumulative += distances[y][x];
-            if(cumulative > r){
-                res_centroid = get_color(image, x, y);
+    Color* centroids = malloc(k * sizeof(Color));
+    double** cumulative =  malloc(h * sizeof(double *));
+    char rows_alloced = 1;
+    for(int i = 0; i < h; i++){
+        cumulative[i] = malloc(w * sizeof(double));
+    }
+    float** dists = malloc(h * sizeof(int*));
+    char rows_alloced_1 = 1;
+    for(int i = 0; i < h; i++){
+        dists[i] = malloc(w * sizeof(int));
+        if(!dists[i]) rows_alloced = 0;
+    }
+
+    if(!centroids || !cumulative || !dists || !rows_alloced || !rows_alloced_1){
+        FREE_IF_NEEDED(centroids);
+        FREE_IF_NEEDED(cumulative);
+        FREE_IF_NEEDED(dists);
+        if(!rows_alloced){
+            for(int i = 0; i < h; i++){
+                free(cumulative[i]);
+            }
+        }
+        if(!rows_alloced_1){
+            for(int i = 0; i < h; i++){
+                free(dists[i]);
+            }
+        }
+        printf("Cluster filter: allocation failed\n");
+        return NULL;
+
+    }
+
+    int random_x = rand() % w;
+    int random_y = rand() % h;
+    centroids[0] = get_color(image, random_x, random_y);
+
+    for(int i = 1; i < k; i++){
+        float cur_sum = 0;
+        for(int y = 0; y < h; y++){
+            for(int x = 0; x < w; x++){
+                Color cur_color = get_color(image,x,y);
+                double min_dist = min_distance(cur_color, centroids, centrs_ready);
+                dists[y][x] = min_dist;
+                total += min_dist;
+                cumulative[y][x] = cur_sum + min_dist;
+
+            }
+        }
+        int random_num = rand() % (int)(total + 1);
+
+        char found = 0;
+        for(int y = 0; y < h && !found; y++){
+            for(int x = 0; x < w && !found; x++){
+                if(random_num < cumulative[y][x]){
+                    centroids[i] = get_color(image, x,y);
+                    found = 1;
+
+                }
+
             }
         }
     }
-    printf("Finishing\n");
-    for(int n = 0; n < image->height; n++){
-        free(distances[n]);
-    }
-    free(distances);
-    printf("centroid done: %f %f %f\n", res_centroid.r, res_centroid.g, res_centroid.b);
+    return centroids;
 
-    return res_centroid;
+
 }
 
-void kmeans_cluster(Image* image, int k, int iters){
+void kmeans_cluster(Image* image, int centr_c){
     srand(time(NULL));
     unsigned int w = image->height;
     unsigned int h = image->width;
     int tolerance = 1;
+    int max_iters = 20;
 
-    Color* centroids = malloc(k * sizeof(Color));
-    Color* new_centroids = malloc(k * sizeof(Color));
+    Color* centroids = malloc(centr_c * sizeof(Color));
+    Color* new_centroids = malloc(centr_c * sizeof(Color));
 
-    double* red_avg = malloc(sizeof(double) * k);
-    double* green_avg = malloc(sizeof(double) * k);
-    double* blue_avg =  malloc(sizeof(double) * k);
-    int* labeled_count =  malloc(sizeof(int) * k);
+    double* red_avg = malloc(sizeof(double) * centr_c);
+    double* green_avg = malloc(sizeof(double) * centr_c);
+    double* blue_avg =  malloc(sizeof(double) * centr_c);
+    int* labeled_count =  malloc(sizeof(int) * centr_c);
 
     int** centroid_labels = malloc(h * sizeof(int*));
     char rows_alloced = 1;
@@ -559,7 +579,7 @@ void kmeans_cluster(Image* image, int k, int iters){
     }
 
     if(!centroids || !new_centroids || !red_avg || !green_avg || !blue_avg || !labeled_count || !centroid_labels || !rows_alloced){
-        printf("Clutster filter: allocation failed\n");
+        printf("Cluster filter: allocation failed\n");
             if(!rows_alloced){
                 for(int i = 0; i < h; i++){
                     free(centroid_labels[i]);
@@ -576,22 +596,18 @@ void kmeans_cluster(Image* image, int k, int iters){
 
     }
 
-    for(int i = 0; i < k; i++){
-        int random_x = rand() % image->width;
-        int random_y = rand() % image->height;
-        centroids[i] = get_color(image, random_x, random_y);
-    }
+    centroids = select_centroid(image, centroids, centr_c);
 
-    for(int n =  0; n < iters; n++){
-        memset(red_avg, 0, k * sizeof(double));
-        memset(green_avg, 0, k * sizeof(double));
-        memset(blue_avg, 0, k * sizeof(double));
-        memset(labeled_count, 0, k * sizeof(int));
+    for(int n =  0; n < max_iters; n++){
+        memset(red_avg, 0, centr_c * sizeof(double));
+        memset(green_avg, 0, centr_c * sizeof(double));
+        memset(blue_avg, 0, centr_c * sizeof(double));
+        memset(labeled_count, 0, centr_c * sizeof(int));
 
         for(int y = 0; y < h; y++){
             for(int x = 0; x < w; x++){
                 Color cur_color = get_color(image, x, y);
-                int cur_label = get_nearest(cur_color, centroids, k);
+                int cur_label = get_nearest(cur_color, centroids, centr_c);
                 centroid_labels[y][x] = cur_label;
 
                 labeled_count[cur_label]++;
@@ -600,21 +616,20 @@ void kmeans_cluster(Image* image, int k, int iters){
                 blue_avg[cur_label] += cur_color.b;
             }
         }
-        char centrs_changed = 1;
-        for(int i = 0; i < k; i++){
+        char centrs_changed = 0;
+        for(int i = 0; i < centr_c; i++){
             int cur_labeled_count = labeled_count[i];
-            if(cur_labeled_count == 0){
-                printf("zero division detected");
-            }
-            new_centroids[i] = (Color){red_avg[i]/cur_labeled_count, green_avg[i]/cur_labeled_count, blue_avg[i]/cur_labeled_count};
-            float dist = get_distance(centroids[i], new_centroids[i]);
-            if(dist < tolerance){
-                centrs_changed = 0;
+            if(cur_labeled_count != 0){
+                new_centroids[i] = (Color){red_avg[i]/cur_labeled_count, green_avg[i]/cur_labeled_count, blue_avg[i]/cur_labeled_count};
+                float dist = get_distance(centroids[i], new_centroids[i]);
+                if(dist > tolerance){
+                    centrs_changed = 1;
+                }
             }
         }
         if(centrs_changed){
-            memcpy(centroids, new_centroids, k * sizeof(Color));
-            memset(new_centroids, 0, k * sizeof(Color));
+            memcpy(centroids, new_centroids, centr_c * sizeof(Color));
+            memset(new_centroids, 0, centr_c * sizeof(Color));
         }
         else{
             break;
@@ -622,8 +637,8 @@ void kmeans_cluster(Image* image, int k, int iters){
 
 
     }
-    for(int y = 0; y < image->height; y++){
-        for(int x = 0; x < image->width; x++){
+    for(int y = 0; y < h; y++){
+        for(int x = 0; x < w; x++){
             int cur_label = centroid_labels[y][x];
             Color centr_color = centroids[cur_label];
             set_color(image, x, y, centr_color);
