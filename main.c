@@ -124,7 +124,7 @@ int main(int argn, char *args[]){
     apply_pipeline(image, pipeline);
     save_bmp(output_path, image);
 
-    fprintf(stdout, "Program finished! %d filters applied", pipeline->count);
+    fprintf(stdout, "Program finished! %d filters applied\n", pipeline->count);
 
     destroy_image(image);
     destroy_pipeline(pipeline);

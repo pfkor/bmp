@@ -29,28 +29,85 @@ void apply_pipeline(Image* image, FilterPipeline* pipeline){
 
     switch (curFilter.Type) {
 
-    case NEG:     negative(image); break;
-    case GS:      monochrome(image); break;
-
-    case CROP:    crop(image, 0, curFilter.params.crop.width, 0, curFilter.params.crop.height); break;
-
-    case SHARP:   matrix_sharpening(image); break;
-    case EDGE:    edge(image, curFilter.params.edge.threshold); break;
-
-    case MED:     median_by_channel(image, curFilter.params.median.window); break;
-
-    case BLUR:    gaussian_blur(image, curFilter.params.blur.sigma); break;
-
-
-    case CLUSTER: kmeans_cluster(image, curFilter.params.cluster.centroids); break;
-
-    case MOSAIC: 
-        create_tiles(curFilter.params.mosaic.filepath, &curFilter.params.mosaic.tiles_number);
-        replace_tiles(image, curFilter.params.mosaic.tiles_number);
+    case NEG: 
+        if(negative(image) == 0){
+            printf("Filter \"negative\" successfully applied.\n");
+        } else {
+            printf("Filter \"negative\" failed.\n");
+        }
+        break;
+    case GS: 
+        if(monochrome(image) == 0){
+            printf("Filter \"grayscale\" successfully applied.\n");
+        } else {
+            printf("Filter \"grayscale\" failed.\n");
+        }
         break;
 
-    case FISH:   fish_eye(image, curFilter.params.fisheye.strength);  break;
+    case CROP: 
+        if(crop(image, 0, curFilter.params.crop.width, 0, curFilter.params.crop.height) == 0){
+            printf("Filter \"crop\" successfully applied.\n");
+        } else {
+            printf("Filter \"crop\" failed.\n");
+        }
+        break;
 
+    case SHARP: 
+        if(matrix_sharpening(image) == 0){
+            printf("Filter \"sharpening\" successfully applied.\n");
+        } else {
+            printf("Filter \"sharpening\" failed.\n");
+        }
+        break;
+    case EDGE: 
+        if(edge(image, curFilter.params.edge.threshold) == 0){
+            printf("Filter \"edges\" successfully applied.\n");
+        } else {
+            printf("Filter \"edges\" failed.\n");
+        }
+        break;
+
+    case MED: 
+        if(median_by_channel(image, curFilter.params.median.window) == 0){
+            printf("Filter \"median\" successfully applied.\n");
+        } else {
+            printf("Filter \"median\" failed.\n");
+        }
+        break;
+
+    case BLUR: 
+        if(gaussian_blur(image, curFilter.params.blur.sigma) == 0){
+            printf("Filter \"gaussian blur\" successfully applied.\n");
+        } else {
+            printf("Filter \"gaussian blur\" failed.\n");
+        }
+        break;
+
+
+    case CLUSTER: 
+        if(kmeans_cluster(image, curFilter.params.cluster.centroids) == 0){
+            printf("Filter \"posterisation\" successfully applied.\n");
+        } else {
+            printf("Filter \"posterisation\" failed.\n");
+        }
+        break;
+
+    case MOSAIC: 
+        if(create_tiles(curFilter.params.mosaic.filepath, &curFilter.params.mosaic.tiles_number) == 0 && \
+        replace_tiles(image, curFilter.params.mosaic.tiles_number == 0)){
+            printf("Filter \"mosaic\" successfully applied.\n");
+        } else {
+            printf("Filter \"mosaic\" failed.\n");
+        }
+        break;
+
+    case FISH:
+        if(fish_eye(image, curFilter.params.fisheye.strength) == 0){
+            printf("Filter \"fish eye\" successfully applied.\n");
+        } else {
+            printf("Filter \"fish eye\" failed.\n");
+        }
+        break;
 
     default: break;
     }

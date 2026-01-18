@@ -34,22 +34,22 @@ swap(float);
 
 
 
-void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
-    if (!image || !image->data) return;
+int crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
+    if (!image || !image->data) return 1;
     
     unsigned int w = image->width;
     unsigned int h = image->height;
     if (w == 0 || h == 0 || \
     x_from >= w || x_to > w || x_to <= x_from || \
     y_from >= h || y_to > h || y_to <= y_from){
-        return;
+        return 1;
     }
 
     unsigned int new_w = x_to - x_from;
     unsigned int new_h = y_to - y_from;
 
     Color **temp = malloc(sizeof(Color *) * new_h);
-    if (!temp) return;
+    if (!temp) return 1;
 
     for (unsigned int y = 0; y < new_h; y++){
         temp[y] = malloc(sizeof(Color) * new_w);
@@ -59,7 +59,7 @@ void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_f
                 free(temp[j]);
             }
             free(temp);
-            return;
+            return 1;
         }
     }
 
@@ -77,12 +77,13 @@ void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_f
     image->width = new_w;
     image->height = new_h;
     image->data = temp;
+    return 0;
 }
 
-void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor){
-    if (!image || !image->data) return;
+int multiply_channels(Image* image, float r_factor, float g_factor, float b_factor){
+    if (!image || !image->data) return 1;
     if (r_factor < 0 || r_factor > 1 || g_factor < 0 || g_factor > 1 || b_factor < 0 || b_factor > 1){
-        return;
+        return 1;
     }
     
     for (unsigned int y = 0; y < image->height; y++){
@@ -94,10 +95,11 @@ void multiply_channels(Image* image, float r_factor, float g_factor, float b_fac
             set_color(image, x, y, c);
         }
     }
+    return 0;
 }
 
-void negative (Image *image){
-    if (!image || !image->data) return;
+int negative (Image *image){
+    if (!image || !image->data) return 1;
 
     for (unsigned int y = 0; y < image->height; y++){
         for (unsigned int x = 0; x < image->width; x++){
@@ -108,10 +110,11 @@ void negative (Image *image){
             set_color(image, x, y, c);
         }
     }
+    return 0;
 }
 
-void monochrome (Image *image){
-    if (!image || !image->data) return;
+int monochrome (Image *image){
+    if (!image || !image->data) return 1;
 
     for (unsigned int y = 0; y < image->height; y++){
         for (unsigned int x = 0; x < image->width; x++){
@@ -122,6 +125,7 @@ void monochrome (Image *image){
             set_color(image, x, y, c);
         }
     }   
+    return 0;
 }
 
 void get_window(Image *window, unsigned int x, unsigned int y, Image *image){
@@ -164,9 +168,9 @@ Color impose_matrix(Image *window, float *matrix,  int size){
     return res;
 }
 
-void matrix_sharpening(Image* image){
+int matrix_sharpening(Image* image){
 
-    if (!image || !image->data) return;
+    if (!image || !image->data) return 1;
 
     unsigned int w = image->width;
     unsigned int h = image->height;
@@ -176,13 +180,13 @@ void matrix_sharpening(Image* image){
 
     Image *temp = create_image(w, h);
     if (!temp){
-        return;
+        return 1;
     }
 
     Image *window = create_image(3, 3);
     if (!window){
         destroy_image(temp);
-        return;
+        return 1;
     }
 
     for (unsigned int y = 0; y < h; y++){
@@ -204,10 +208,11 @@ void matrix_sharpening(Image* image){
 
     destroy_image(window);
     destroy_image(temp);
+    return 0;
 }
 
-void gaussian_blur(Image *image, float sigma){
-    if (!image || !image->data) return;
+int gaussian_blur(Image *image, float sigma){
+    if (!image || !image->data) return 1;
     clock_t timer;
     timer = clock();
 
@@ -218,7 +223,7 @@ void gaussian_blur(Image *image, float sigma){
     // int kernel_size = 3;
 
     float *kernel = malloc(sizeof(float) * kernel_size * kernel_size);
-    if (!kernel) return;
+    if (!kernel) return 1;
 
     int center = kernel_size/2;
     float sum = 0.0;
@@ -240,13 +245,13 @@ void gaussian_blur(Image *image, float sigma){
     Image *temp = create_image(w, h);
     if (!temp){
         free(kernel);
-        return;
+        return 1;
     }
     Image *window = create_image(kernel_size, kernel_size);
     if (!window){
         free(kernel);
         destroy_image(temp);
-        return;
+        return 1;
     }
 
     for (unsigned int y = 0; y < h; y++){
@@ -258,7 +263,6 @@ void gaussian_blur(Image *image, float sigma){
 
             set_color(temp, x, y, sum);
         }
-        // if (y % 256 == 0) printf("%d/%d\n", y, h);
     }
     for (unsigned int y = 0; y < h; y++){
         for (unsigned int x = 0; x < w; x++){
@@ -273,11 +277,11 @@ void gaussian_blur(Image *image, float sigma){
     free(kernel);
     destroy_image(temp);
     destroy_image(window);
-
+    return 0;
 }
 
-void edge(Image* image, float threshold){
-    if (!image || !image->data) return;
+int edge(Image* image, float threshold){
+    if (!image || !image->data) return 1;
 
     monochrome(image);
     unsigned int w = image->width;
@@ -289,13 +293,13 @@ void edge(Image* image, float threshold){
 
     Image *temp = create_image(w, h);
     if (!temp){
-        return;
+        return 1;
     }
 
     Image *window = create_image(3, 3);
     if (!window){
         destroy_image(temp);
-        return;
+        return 1;
     }
 
     for (unsigned int y = 0; y < h; y++){
@@ -321,6 +325,7 @@ void edge(Image* image, float threshold){
 
     destroy_image(window);
     destroy_image(temp);
+    return 0;
 }
 
 
@@ -357,10 +362,8 @@ static float quick_select(float arr[], int left, int right, int k){
 }
 
 
-void median_by_channel(Image* image, int wind_size){
-    clock_t timer;
-    timer = clock();
-    if (!image || !image->data) return;
+int median_by_channel(Image* image, int wind_size){
+    if (!image || !image->data) return 1;
 
     unsigned int w = image->width;
     unsigned int h = image->height;
@@ -368,13 +371,13 @@ void median_by_channel(Image* image, int wind_size){
 
     Image *temp = create_image(w, h);
     if (!temp){
-        return;
+        return 1;
     }
 
     Image* window = create_image(wind_size, wind_size);
     if (!window){
         destroy_image(temp);
-        return;
+        return 1;
     }
     unsigned int window_side = window->width;
     unsigned int pixel_count = window_side*window_side;
@@ -389,6 +392,7 @@ void median_by_channel(Image* image, int wind_size){
         FREE_IF_NEEDED(b_vals);
         destroy_image(temp);
         destroy_image(window);
+        return 1;
     }
 
     int checkpoint = h/20;
@@ -415,13 +419,6 @@ void median_by_channel(Image* image, int wind_size){
             float median_blue = quick_select(b_vals, 0, count-1, k);
 
             Color med = {median_red, median_green,median_blue};
-            if (x == 0 && y % checkpoint == 0){
-                system(CLEAR_CONSOLE);
-                printf("Median processing: [");
-                for (int i = 0; i < (int)(100*y/h); i++) printf("#");
-                for (int i = (int)(100*y/h); i < 100; i++) printf(".");
-                printf("] %d%%\n", (int)(100*y/h));                
-            }
             limit_color(&med);
             set_color(temp, x, y, med);
 
@@ -433,20 +430,13 @@ void median_by_channel(Image* image, int wind_size){
             set_color(image, x, y, get_color(temp, x, y));
         }
     }
-    timer = clock() - timer;
 
-    system(CLEAR_CONSOLE);
-    printf("Median processing: [");
-    for (int i = 0; i < 100; i++) printf("#");
-    printf("] 100%%\n");
-    
-    double time_taken = ((double)timer) / CLOCKS_PER_SEC;
-    printf("It was %f seconds\n", time_taken);
     free(r_vals);
     free(g_vals);
     free(b_vals);
     destroy_image(window);
     destroy_image(temp);
+    return 0;
 }
 
 static Color* select_centroid(Image* image, int k){
@@ -523,7 +513,7 @@ static Color* select_centroid(Image* image, int k){
 
 }
 
-void kmeans_cluster(Image* image, int centr_c){
+int kmeans_cluster(Image* image, int centr_c){
     srand(time(NULL));
     unsigned int w = image->width;
     unsigned int h = image->height;
@@ -559,8 +549,7 @@ void kmeans_cluster(Image* image, int centr_c){
         FREE_IF_NEEDED(blue_avg);
         FREE_IF_NEEDED(labeled_count);
         FREE_IF_NEEDED(centroid_labels);
-        return;
-
+        return 1;
     }
 
     centroids = select_centroid(image, centr_c);
@@ -625,16 +614,14 @@ void kmeans_cluster(Image* image, int centr_c){
         free(centroid_labels[i]);
     }
     free(centroid_labels);
-
+    return 0;
 }
 
-
-
-void create_tiles(char *filepath, int *tiles_number){
+int create_tiles(char *filepath, int *tiles_number){
     FILE *input = fopen(filepath, "rb");
     if (!input){
         fprintf(stderr, "Failed to open dataset file!\n");
-        return;
+        return 1;
     }
 
     uint8_t skip, value;
@@ -645,7 +632,7 @@ void create_tiles(char *filepath, int *tiles_number){
         fclose(input);
         if (current) free(current);
         if (filename) free(filename);
-        return;
+        return 1;
     }
 
     for (int i = 0; i < *tiles_number; i++){
@@ -659,7 +646,7 @@ void create_tiles(char *filepath, int *tiles_number){
                     destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
-                    return;
+                    return 1;
                 }
                 current->data[y][x].r = value;
             }
@@ -672,7 +659,7 @@ void create_tiles(char *filepath, int *tiles_number){
                     destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
-                    return;
+                    return 1;
                 }
                 current->data[y][x].g = value;
             }
@@ -685,7 +672,7 @@ void create_tiles(char *filepath, int *tiles_number){
                     destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
-                    return;
+                    return 1;
                 }
                 current->data[y][x].b = value;
             }
@@ -697,6 +684,7 @@ void create_tiles(char *filepath, int *tiles_number){
     free(current);
     free(filename);
     fclose(input);
+    return 0;
 }
 
 
@@ -724,8 +712,8 @@ Color get_average(Image *image, unsigned int x_from, unsigned int x_to, unsigned
 }
 
 
-void replace_tiles(Image *image, int tiles_number){
-    if (!image || !image->data) return;
+int replace_tiles(Image *image, int tiles_number){
+    if (!image || !image->data) return 1;
 
     int tile_size = 32;
     Image *current = create_image(tile_size, tile_size);
@@ -734,7 +722,7 @@ void replace_tiles(Image *image, int tiles_number){
         fprintf(stderr, "Failed to allocate memory!\n");
         if (current) destroy_image(current);
         if (filepath) free(filepath);
-        return;
+        return 1;
     }
 
     Color palette[tiles_number];
@@ -745,7 +733,7 @@ void replace_tiles(Image *image, int tiles_number){
         if (!current){
             fprintf(stderr, "Failed to load tile! %d\n", i);
             free(filepath);
-            return;
+            return 1;
         }
 
         palette[i] = get_average(current, 0, tile_size, 0, tile_size);    
@@ -765,7 +753,7 @@ void replace_tiles(Image *image, int tiles_number){
             if (!current){
                 fprintf(stderr, "Failed to load tile! %d\n", nearest_idx);
                 free(filepath);
-                return;
+                return 1;
             }
 
             for (int ky = 0; ky < tile_size; ky++){
@@ -778,9 +766,11 @@ void replace_tiles(Image *image, int tiles_number){
 
     free(current);
     free(filepath);
+    return 0;
 }
 
-void fish_eye(Image* image, float strength){
+int fish_eye(Image* image, float strength){
+    if (!image || !image->data) return 1;
     unsigned int w = image->width;
     unsigned int h = image->height;
     Image* temp = create_image(w,h);
@@ -859,4 +849,5 @@ void fish_eye(Image* image, float strength){
         }
     }
     destroy_image(temp);
+    return 0;
 }

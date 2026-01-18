@@ -43,22 +43,20 @@ typedef struct {
 }Filter;
 
 
-void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to);
-void multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
+int crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to);
+int multiply_channels(Image* image, float r_factor, float g_factor, float b_factor);
 
-void matrix_sharpening(Image* image);
-void gaussian_blur(Image* image, float sigma);
+int matrix_sharpening(Image* image);
+int gaussian_blur(Image* image, float sigma);
 
-void edge(Image* image, float threshold);
+int edge(Image* image, float threshold);
 
-// void median(Image* image, int wind_size);
-void median_by_channel(Image* image, int wind_size);
-void kmeans_cluster(Image* image, int centr_c);
-void fish_eye(Image* image, float strength);
+int median_by_channel(Image* image, int wind_size);
+int kmeans_cluster(Image* image, int centr_c);
+int fish_eye(Image* image, float strength);
 
-void negative (Image *image);
-void monochrome (Image *image);
+int negative (Image *image);
+int monochrome (Image *image);
 
-void create_tiles(char *filepath, int* tiles_number);
-// void average_tiles(Image *image, int tile_width);
-void replace_tiles(Image *image, int tiles_number);
+int create_tiles(char *filepath, int* tiles_number);
+int replace_tiles(Image *image, int tiles_number);
