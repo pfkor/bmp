@@ -211,72 +211,137 @@ int matrix_sharpening(Image* image){
     return 0;
 }
 
+float* create_gaussian_kernel(float sigma, int* kernel_size) {
+
+    *kernel_size = (int)ceil(6 * sigma);
+    if (*kernel_size % 2 == 0) (*kernel_size)++;
+
+    float* kernel = malloc(*kernel_size * sizeof(float));
+    if (!kernel) return NULL;
+
+    int radius = *kernel_size / 2;
+    float sum = 0.0f;
+    float two_sigma_sq = 2.0f * sigma * sigma;
+
+    float sigma_root = sqrt(2.0f * M_PI) * sigma;
+
+    for (int i = -radius; i <= radius; i++) {
+        float val = exp(-(i * i) / two_sigma_sq) / sigma_root;
+        kernel[i + radius] = val;
+        sum += val;
+    }
+
+
+    float inv_sum = 1.0f / sum;
+    for (int i = 0; i < *kernel_size; i++) {
+        kernel[i] *= inv_sum;
+    }
+
+    return kernel;
+}
+
 int gaussian_blur(Image *image, float sigma){
     if (!image || !image->data) return 1;
+
     clock_t timer;
     timer = clock();
 
     unsigned int w = image->width;
     unsigned int h = image->height;
 
-    int kernel_size = 2 * (int)ceil(sigma*3) + 1;
-    // int kernel_size = 3;
 
-    float *kernel = malloc(sizeof(float) * kernel_size * kernel_size);
+    int kernel_size;
+    float* kernel = create_gaussian_kernel(sigma, &kernel_size);
     if (!kernel) return 1;
 
-    int center = kernel_size/2;
-    float sum = 0.0;
-    for (int i = 0; i < kernel_size; i++){
-        for (int j = 0; j < kernel_size; j++){
-            int x = i - center;
-            int y = j - center;
+    int radius = kernel_size / 2;
 
-            // G(x, y) = (1 / (2πσ²)) × exp(-(x² + y²) / (2σ²))          
-            float exponent = -(x*x + y*y) / (2*sigma*sigma);  
-            float value = exp(exponent) / (2*M_PI*sigma*sigma);
 
-            kernel[i*kernel_size + j] = value;
-            sum += value;
-        }
-    }
-    for (int i = 0; i < kernel_size * kernel_size; i++) kernel[i] /= sum;
-
-    Image *temp = create_image(w, h);
-    if (!temp){
+    Image* temp = create_image(w, h);
+    if (!temp) {
         free(kernel);
         return 1;
     }
-    Image *window = create_image(kernel_size, kernel_size);
-    if (!window){
-        free(kernel);
-        destroy_image(temp);
-        return 1;
-    }
 
-    for (unsigned int y = 0; y < h; y++){
-        for (unsigned int x = 0; x < w; x++){
 
-            get_window(window, x, y, image);
-            Color sum = impose_matrix(window, kernel, kernel_size);
-            limit_color(&sum);
+    for (unsigned int y = 0; y < h; y++) {
+        for (unsigned int x = 0; x < w; x++) {
+            float sum_r = 0.0f, sum_g = 0.0f, sum_b = 0.0f;
 
-            set_color(temp, x, y, sum);
+
+            if (x >= radius && x < w - radius) {
+                for (int k = -radius; k <= radius; k++) {
+                    Color c = get_color(image, x + k, y);
+                    float weight = kernel[k + radius];
+                    sum_r += c.r * weight;
+                    sum_g += c.g * weight;
+                    sum_b += c.b * weight;
+                }
+            } else {
+
+                for (int k = -radius; k <= radius; k++) {
+                    int px = x + k;
+
+                    if (px < 0) px = -px;
+                    if (px >= w) px = 2 * w - px - 1;
+
+                    Color c = get_color(image, px, y);
+                    float weight = kernel[k + radius];
+                    sum_r += c.r * weight;
+                    sum_g += c.g * weight;
+                    sum_b += c.b * weight;
+                }
+            }
+
+            Color result = {sum_r, sum_g, sum_b};
+            limit_color(&result);
+            set_color(temp, x, y, result);
         }
     }
-    for (unsigned int y = 0; y < h; y++){
-        for (unsigned int x = 0; x < w; x++){
-            set_color(image, x, y, get_color(temp, x, y));
+
+
+    for (unsigned int x = 0; x < w; x++) {
+        for (unsigned int y = 0; y < h; y++) {
+            float sum_r = 0.0f, sum_g = 0.0f, sum_b = 0.0f;
+
+
+            if (y >= radius && y < h - radius) {
+                for (int k = -radius; k <= radius; k++) {
+                    Color c = get_color(temp, x, y + k);
+                    float weight = kernel[k + radius];
+                    sum_r += c.r * weight;
+                    sum_g += c.g * weight;
+                    sum_b += c.b * weight;
+                }
+            } else {
+
+                for (int k = -radius; k <= radius; k++) {
+                    int py = y + k;
+
+                    if (py < 0) py = -py;
+                    if (py >= h) py = 2 * h - py - 1;
+
+                    Color c = get_color(temp, x, py);
+                    float weight = kernel[k + radius];
+                    sum_r += c.r * weight;
+                    sum_g += c.g * weight;
+                    sum_b += c.b * weight;
+                }
+            }
+
+            Color result = {sum_r, sum_g, sum_b};
+            limit_color(&result);
+            set_color(image, x, y, result);
         }
     }
 
     timer = clock() - timer;
     double time_taken = ((double)timer) / CLOCKS_PER_SEC;
-    printf("It was %f seconds\n", time_taken);
+    printf("Fast Gaussian blur took %f seconds\n", time_taken);
 
     free(kernel);
     destroy_image(temp);
-    destroy_image(window);
+
     return 0;
 }
 
@@ -855,3 +920,5 @@ int fish_eye(Image* image, float strength){
     destroy_image(temp);
     return 0;
 }
+
+

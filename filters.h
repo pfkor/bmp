@@ -48,6 +48,7 @@ int multiply_channels(Image* image, float r_factor, float g_factor, float b_fact
 
 int matrix_sharpening(Image* image);
 int gaussian_blur(Image* image, float sigma);
+int fast_gaussian_blur(Image* image, float sigma);
 
 int edge(Image* image, float threshold);
 
