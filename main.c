@@ -13,7 +13,17 @@ void console_img (Image*);
 int main(int argn, char *args[]){
 
     if (argn < 3){
-        fprintf(stdout, "Usage: ./program <input> <output> <...>\n");
+        fprintf(stdout, "Usage: {program} {input file} {output file} [-{filter} [param 1] [param 2] ...] ... \n");
+        fprintf(stdout, "\nFilters usage:\n");
+        fprintf(stdout, "\t-crop {width} {height}                    Cut image to new size\n");
+        fprintf(stdout, "\t-gs                                       Make image monochrome\n");
+        fprintf(stdout, "\t-neg                                      Invert colors\n");
+        fprintf(stdout, "\t-sharp                                    Make edges clear\n");
+        fprintf(stdout, "\t-edge {threshold}                         Find and highlight edges\n");
+        fprintf(stdout, "\t-med {window}                             Reduce noise\n");
+        fprintf(stdout, "\t-blur {sigma}                             Make image blurry\n");
+        fprintf(stdout, "\t-cluster {centroids}                      Reduce number of colors\n");
+        fprintf(stdout, "\t-mosaic {dataset file} {dataset size}     Create image made of small pictures\n");
         return 1;
     }
 
@@ -101,12 +111,11 @@ int main(int argn, char *args[]){
             }
         }
         else if (strcmp(args[i], "-mosaic") == 0){
-            if(i + 3 < argn){
+            if(i + 2 < argn){
                 cur_filter.Type = MOSAIC;
-                cur_filter.params.mosaic.tile_size = atoi(args[i+1]);
-                cur_filter.params.mosaic.filepath = args[i+2];
-                cur_filter.params.mosaic.tiles_number = atoi(args[i+3]);
-                i+=3;
+                cur_filter.params.mosaic.filepath = args[i+1];
+                cur_filter.params.mosaic.tiles_number = atoi(args[i+2]);
+                i+=2;
             }
             else{
                 fprintf(stdout, "Wrong or no args for filter\n");
@@ -136,7 +145,6 @@ int main(int argn, char *args[]){
 
     destroy_image(image);
     destroy_pipeline(pipeline);
-    fprintf(stdout, "Successfully runed\n");
     return 0;
 }
 

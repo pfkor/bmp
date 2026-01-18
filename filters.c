@@ -61,8 +61,8 @@ void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_f
     unsigned int w = image->width;
     unsigned int h = image->height;
     if (w == 0 || h == 0 || \
-    x_from >= w || x_to >= w || x_to <= x_from || \
-    y_from >= h || y_to >= h || y_to <= y_from){
+    x_from >= w || x_to > w || x_to <= x_from || \
+    y_from >= h || y_to > h || y_to <= y_from){
         return;
     }
 
@@ -660,7 +660,7 @@ void kmeans_cluster(Image* image, int centr_c){
 
 
 
-void create_tiles(char *filepath, int tiles_number){
+void create_tiles(char *filepath, int *tiles_number){
     FILE *input = fopen(filepath, "rb");
     if (!input){
         fprintf(stderr, "Failed to open dataset file!\n");
@@ -678,7 +678,7 @@ void create_tiles(char *filepath, int tiles_number){
         return;
     }
 
-    for (int i = 0; i < tiles_number; i++){
+    for (int i = 0; i < *tiles_number; i++){
         if (fread(&skip, sizeof(uint8_t), 1, input) != 1) printf("Failed to skip a byte\n");
 
         for (int y = 0; y < 32; y++){
@@ -688,6 +688,7 @@ void create_tiles(char *filepath, int tiles_number){
                     fclose(input);
                     free(current);
                     free(filename);
+                    *tiles_number = i-1;
                     return;
                 }
                 current->data[y][x].r = value;
@@ -700,6 +701,7 @@ void create_tiles(char *filepath, int tiles_number){
                     fclose(input);
                     free(current);
                     free(filename);
+                    *tiles_number = i-1;
                     return;
                 }
                 current->data[y][x].g = value;
@@ -712,6 +714,7 @@ void create_tiles(char *filepath, int tiles_number){
                     fclose(input);
                     free(current);
                     free(filename);
+                    *tiles_number = i-1;
                     return;
                 }
                 current->data[y][x].b = value;
