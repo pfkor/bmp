@@ -15,7 +15,7 @@
 #endif
 
 #define swap(type) \
-    type swap_ ## type(type* a, type* b) { \
+    void swap_ ## type(type* a, type* b) { \
         type temp = *a;\
         *a = *b;\
         *b = temp;\
@@ -33,27 +33,6 @@ swap(float);
   if(ptr) free(ptr);
 
 
-//Filter filter_init(FilterType Type, char args[1024], void (*pixel_func)(Color*)) {
-//    Filter new_filter;
-//   new_filter.Type = Type;
-//  if (args != NULL) {
-//       strcpy(new_filter.args, args);
-//   }
-//  new_filter.params.pixelFunc = pixel_func;
-//
-//   return new_filter;
-//}
-
-// void all_pixel_proccess(Image* image, void (*pixel_func)(Color*)){
-//     if (!image || !image->data) return;
-//     unsigned int h = image->height;
-//     unsigned int w = image->width;
-//     for(int y = 0; y < h; y++){
-//         for(int x = 0; x < w; x++){
-//             pixel_func(&image->data[y][x]);
-//         }
-//     }
-// }
 
 void crop(Image* image, unsigned int x_from, unsigned int x_to, unsigned int y_from, unsigned int y_to){
     if (!image || !image->data) return;
@@ -377,29 +356,7 @@ static float quick_select(float arr[], int left, int right, int k){
 
 }
 
-static Color median_color(Image* window){
-    unsigned int window_side = window->height;
-    unsigned int cen_xy = (window_side - 1)/2;
-    Color cen_color = get_color(window, cen_xy, cen_xy);
-    Color min_color = {0,0,0};
-    float min_dist = HUGE_VALF;
-    for(unsigned int y = 0; y < window_side; y++){
-        for(unsigned int x = 0; x < window_side; x++){
-            if(y != cen_xy && x != cen_xy){
-                Color cur_color = get_color(window, x,y);
-                float dist = (cur_color.r - cen_color.r) * (cur_color.r - cen_color.r) +  (cur_color.g - cen_color.g) * (cur_color.g - cen_color.g) + (cur_color.b - cen_color.b) * (cur_color.b - cen_color.b);
-                if(dist < min_dist){
-                    min_color = cur_color;
-                    min_dist = dist;
-                }
 
-            }
-        }
-    }
-    return min_color;
-
-
-}
 void median_by_channel(Image* image, int wind_size){
     clock_t timer;
     timer = clock();
@@ -422,9 +379,15 @@ void median_by_channel(Image* image, int wind_size){
     unsigned int window_side = window->width;
     unsigned int pixel_count = window_side*window_side;
 
-    float r_vals[pixel_count];
-    float g_vals[pixel_count];
-    float b_vals[pixel_count];
+    float* r_vals = malloc(pixel_count * sizeof(float ));
+    float* g_vals = malloc(pixel_count * sizeof(float ));
+    float* b_vals = malloc(pixel_count * sizeof(float ));
+
+    if(!r_vals || !g_vals || !b_vals){
+        FREE_IF_NEEDED(r_vals);
+        FREE_IF_NEEDED(g_vals);
+        FREE_IF_NEEDED(b_vals);
+    }
 
     int checkpoint = h/20;
 
@@ -433,9 +396,9 @@ void median_by_channel(Image* image, int wind_size){
             get_window(window, x, y, image);
 
             unsigned int count = 0;
-            for(int y = 0; y < window_side; y++){
-                for(int x = 0; x < window_side; x++){
-                    Color cur_color = get_color(window, x, y);
+            for(int y1 = 0; y < window_side; y++){
+                for(int x1 = 0; x < window_side; x++){
+                    Color cur_color = get_color(window, x1, y1);
                     r_vals[count] = cur_color.r;
                     g_vals[count] = cur_color.g;
                     b_vals[count] = cur_color.b;
@@ -450,7 +413,6 @@ void median_by_channel(Image* image, int wind_size){
             float median_blue = quick_select(b_vals, 0, count-1, k);
 
             Color med = {median_red, median_green,median_blue};
-            // printf("Median found: (%u, %u)\n", x, y);
             if (x == 0 && y % checkpoint == 0){
                 system(CLEAR_CONSOLE);
                 printf("Median processing: [");
@@ -478,6 +440,9 @@ void median_by_channel(Image* image, int wind_size){
     
     double time_taken = ((double)timer) / CLOCKS_PER_SEC;
     printf("It was %f seconds\n", time_taken);
+    free(r_vals);
+    free(g_vals);
+    free(b_vals);
     destroy_image(window);
     destroy_image(temp);
 }
@@ -558,8 +523,8 @@ static Color* select_centroid(Image* image, Color* centroid, int k){
 
 void kmeans_cluster(Image* image, int centr_c){
     srand(time(NULL));
-    unsigned int w = image->height;
-    unsigned int h = image->width;
+    unsigned int w = image->width;
+    unsigned int h = image->height;
     int tolerance = 1;
     int max_iters = 20;
 
@@ -712,7 +677,7 @@ void create_tiles(char *filepath, int *tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read blue %d!\n", i);
                     fclose(input);
-                    free(current);
+                    destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
                     return;

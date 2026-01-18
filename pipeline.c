@@ -11,7 +11,6 @@ FilterPipeline* create_pipeline(){
 void destroy_pipeline(FilterPipeline* pipeline){
     free(pipeline->filters);
     free(pipeline);
-    // тут ещё по идее надо будет проверять нет у фильтра с собой матрицы в кармане
 }
 
 void add_filter(FilterPipeline* pipeline, Filter filter){
@@ -24,26 +23,11 @@ void add_filter(FilterPipeline* pipeline, Filter filter){
     pipeline->count++;
 }
 
-Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
+void apply_pipeline(Image* image, FilterPipeline* pipeline){
   for(int i = 0; i < pipeline->count; i++){
     Filter curFilter = pipeline->filters[i];
 
-    //   switch (curFilter.Type) {
-    //       // фильтры с проходом по всем пикселям без аргументов
-    //       case RED: case BLUE: case GREEN: case NEG: case YELLOW: case CYAN: case MAGENTA: case GS:
-    //           all_pixel_proccess( image,curFilter.params.pixelFunc);
-    //           break;
-    //   }
-    
     switch (curFilter.Type) {
-      
-    case RED:     multiply_channels(image, 1, 0, 0); break;
-    case GREEN:   multiply_channels(image, 0, 1, 0); break;
-    case BLUE:    multiply_channels(image, 0, 0, 1); break;
-
-    case YELLOW:  multiply_channels(image, 1, 1, 0); break;
-    case MAGENTA: multiply_channels(image, 1, 0, 1); break;
-    case CYAN:    multiply_channels(image, 0, 1, 1); break;
 
     case NEG:     negative(image); break;
     case GS:      monochrome(image); break;
@@ -62,11 +46,11 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
 
     case MOSAIC: 
         create_tiles(curFilter.params.mosaic.filepath, &curFilter.params.mosaic.tiles_number);
-        // average_tiles(image, curFilter.params.mosaic.tile_size);
         replace_tiles(image, curFilter.params.mosaic.tiles_number);
         break;
 
-    case FISH:   fish_eye(image, curFilter.params.fisheye.strength);
+    case FISH:   fish_eye(image, curFilter.params.fisheye.strength);  break;
+
 
     default: break;
     }

@@ -29,7 +29,7 @@ float get_distance(Color from, Color to){
     float r = from.r - to.r;
     float g = from.g - to.g;
     float b = from.b - to.b;
-    return r*r + g*g + b*b; // корень больно дорогой, я пока убрал, мы пока дистанцию вроде только для сравнений используем, если что добавим параметр.
+    return r*r + g*g + b*b;
 }
 
 float min_distance(Color main, Color *arr, int len){

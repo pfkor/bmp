@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "color.h"
 
-#pragma pack(push, 1) // отключение padding-а структур, так как BMP и DIB header-ы имеют разный размер
+#pragma pack(push, 1)
 
 typedef struct {
     uint16_t id;
@@ -32,7 +32,7 @@ typedef struct {
     DIB_Header dib;
 } Header;
 
-#pragma pack(pop) // возвращаем как было (там стек)
+#pragma pack(pop)
 
 typedef struct {
     unsigned int width;

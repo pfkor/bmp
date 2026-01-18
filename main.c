@@ -7,23 +7,13 @@
 #include "filters.h"
 #include "pipeline.h"
 
-
-void console_img (Image*);
+void arg_error(char* filter_name);
+void print_help();
 
 int main(int argn, char *args[]){
 
     if (argn < 3){
-        fprintf(stdout, "Usage: {program} {input file} {output file} [-{filter} [param 1] [param 2] ...] ... \n");
-        fprintf(stdout, "\nFilters usage:\n");
-        fprintf(stdout, "\t-crop {width} {height}                    Cut image to new size\n");
-        fprintf(stdout, "\t-gs                                       Make image monochrome\n");
-        fprintf(stdout, "\t-neg                                      Invert colors\n");
-        fprintf(stdout, "\t-sharp                                    Make edges clear\n");
-        fprintf(stdout, "\t-edge {threshold}                         Find and highlight edges\n");
-        fprintf(stdout, "\t-med {window}                             Reduce noise\n");
-        fprintf(stdout, "\t-blur {sigma}                             Make image blurry\n");
-        fprintf(stdout, "\t-cluster {centroids}                      Reduce number of colors\n");
-        fprintf(stdout, "\t-mosaic {dataset file} {dataset size}     Create image made of small pictures\n");
+        print_help();
         return 1;
     }
 
@@ -32,7 +22,7 @@ int main(int argn, char *args[]){
 
     Image *image = load_bmp(input_path);
     if (!image){
-        fprintf(stdout, "Input file issue\n");
+        fprintf(stdout, "Unable to load input file\n");
         destroy_image(image);
         return 1;
     }   
@@ -41,15 +31,7 @@ int main(int argn, char *args[]){
 
     for (int i = 3; i < argn; i++){
         Filter cur_filter;
-        if (strcmp(args[i], "-red") == 0){
-            cur_filter.Type = RED;
-            cur_filter.params.none.dummy = 0;
-        } 
-        else if (strcmp(args[i], "-cyan") == 0){
-            cur_filter.Type = CYAN;
-            cur_filter.params.none.dummy = 0;
-        }
-        else if (strcmp(args[i], "-neg") == 0){
+        if (strcmp(args[i], "-neg") == 0){
             cur_filter.Type = NEG;
             cur_filter.params.none.dummy = 0;
         }
@@ -65,7 +47,7 @@ int main(int argn, char *args[]){
                 i+=2;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -80,7 +62,7 @@ int main(int argn, char *args[]){
                 i++;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -91,7 +73,7 @@ int main(int argn, char *args[]){
                 i++;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -106,7 +88,7 @@ int main(int argn, char *args[]){
                 i++;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter\n");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -118,7 +100,7 @@ int main(int argn, char *args[]){
                 i+=2;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter\n");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -129,7 +111,7 @@ int main(int argn, char *args[]){
                 i++;
             }
             else{
-                fprintf(stdout, "Wrong or no args for filter\n");
+                arg_error(args[i]);
                 return 1;
             }
         }
@@ -148,16 +130,23 @@ int main(int argn, char *args[]){
     return 0;
 }
 
-void console_img (Image *image){ // требовалось для проверки парсера, пока не было вывода. Не нужно(?) но пусть пока останется
-    char gradient[16] = " .,_-=+*nm%#&BW@";   
-    
-    for (int y = 0; y < image->height; y += 10){
-        for (int x = 0; x < image->width; x += 10){
 
-            Color p = get_color(image, x, y);
-            float brightness = ((0.299 * p.r + 0.587 * p.g + 0.114 * p.b) / 16);
-            printf("%c", gradient[(int)brightness % 16]);
-        }
-        printf("\n");
-    }
+void print_help(){
+    fprintf(stdout, "Usage: {program} {input file} {output file} [-{filter} [param 1] [param 2] ...] ... \n");
+    fprintf(stdout, "\nFilters usage:\n");
+    fprintf(stdout, "\t-crop {width} {height}                    Cut image to new size\n");
+    fprintf(stdout, "\t-gs                                       Make image monochrome\n");
+    fprintf(stdout, "\t-neg                                      Invert colors\n");
+    fprintf(stdout, "\t-sharp                                    Make edges clear\n");
+    fprintf(stdout, "\t-edge {threshold}                         Find and highlight edges\n");
+    fprintf(stdout, "\t-med {window}                             Reduce noise\n");
+    fprintf(stdout, "\t-blur {sigma}                             Make image blurry\n");
+    fprintf(stdout, "\t-cluster {centroids}                      Reduce number of colors\n");
+    fprintf(stdout, "\t-mosaic {dataset file} {dataset size}     Create image made of small pictures\n");
+    fprintf(stdout, "\t-fish {strength}                          Curving image from center\n");
+}
+
+void arg_error(char* filter_name){
+    fprintf(stderr, "Wrong or no args for filter: %s\n", filter_name);
+    print_help();
 }

@@ -16,5 +16,5 @@ FilterPipeline* create_pipeline();
 void destroy_pipeline(FilterPipeline* pipeline);
 
 void add_filter(FilterPipeline* pipeline, Filter filter);
-Image* apply_pipeline(Image* image, FilterPipeline* pipeline);
+void apply_pipeline(Image* image, FilterPipeline* pipeline);
 
