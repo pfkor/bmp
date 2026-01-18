@@ -729,6 +729,10 @@ int replace_tiles(Image *image, int tiles_number){
 
     for (int i = 0; i < tiles_number; i++){
         sprintf(filepath, "./tiles/%03d.bmp", i);
+        if (current) {
+            destroy_image(current);
+            current = NULL;
+        }
         current = load_bmp(filepath);
         if (!current){
             fprintf(stderr, "Failed to load tile! %d\n", i);
