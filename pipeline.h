@@ -9,6 +9,7 @@
 typedef struct {
     Filter* filters;
     int count;
+    int success;
     int capacity;
 } FilterPipeline;
 

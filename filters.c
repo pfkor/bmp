@@ -769,7 +769,6 @@ Color get_average(Image *image, unsigned int x_from, unsigned int x_to, unsigned
     return res;
 }
 
-
 int replace_tiles(Image *image, int tiles_number){
     if (!image || !image->data) return 1;
 
