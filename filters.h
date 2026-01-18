@@ -5,7 +5,7 @@
 typedef enum {
     COPY, CROP, FLIP_H, FLIP_V, FLIP_BOTH,
     RED, GREEN, BLUE, NEG, YELLOW, CYAN, MAGENTA, GS,
-    SHARP, EDGE, MED, CLUSTER, BLUR,
+    SHARP, EDGE, MED, CLUSTER, BLUR, FISH,
     MOSAIC
 } FilterType;
 
@@ -32,6 +32,9 @@ typedef union {
         int tiles_number;
     } mosaic;
     struct {
+        float strength;
+    } fisheye;
+    struct {
         char dummy;  // Заглушка для фильтров без параметров
     } none;
 }FilterParams;
@@ -55,6 +58,7 @@ void edge(Image* image, float threshold);
 // void median(Image* image, int wind_size);
 void median_by_channel(Image* image, int wind_size);
 void kmeans_cluster(Image* image, int centr_c);
+void fish_eye(Image* image, float strength);
 
 void negative (Image *image);
 void monochrome (Image *image);

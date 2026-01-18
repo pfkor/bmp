@@ -825,3 +825,83 @@ void replace_tiles(Image *image, int tiles_number){
     free(current);
     free(filepath);
 }
+
+void fish_eye(Image* image, float strength){
+    unsigned int w = image->width;
+    unsigned int h = image->height;
+    Image* temp = create_image(w,h);
+
+    float cx = w / 2.0f;
+    float cy = h / 2.0f;
+
+    float vec_r_x = w - 1 - cx;
+    float vec_r_y = h - 1 - cx;
+
+    float min_r = vec_r_y < vec_r_x ? vec_r_y : vec_r_x;
+
+    for (int y_out = 0; y_out < h; y_out++){
+        for (int x_out = 0; x_out < w; x_out++){
+            float new_x = x_out - cx;
+            float new_y = y_out - cy;
+
+            float dist = sqrt(new_x * new_x + new_y * new_y);
+            float dist_norm = dist / min_r;
+
+            if(dist_norm > 1.0f){
+                set_color(temp,x_out, y_out, (Color){0,0,0});
+                continue;
+            }
+
+            float new_dist_norm = dist_norm * ((1 + strength * dist_norm * dist_norm)/ (1 + strength));
+            float  new_dist = new_dist_norm * min_r;
+
+            float x_src;
+            float y_src;
+
+            if(dist != 0){
+                float factor = new_dist / dist;
+                x_src = cx + new_x * factor;
+                y_src = cy + new_y * factor;
+            }
+            else{
+                x_src = cx;
+                y_src = cy;
+            }
+
+            int x0 = (int) floor(x_src);
+            int y0 = (int) floor(y_src);
+            int x1 = x0 + 1;
+            int y1 = y0 + 1;
+
+            float dx = x_src - x0;
+            float dy = y_src - y0;
+            float dx1 = 1.0 - dx;
+            float dy1 = 1.0 - dy;
+
+            Color res;
+
+            Color p00 = get_color(image,x0, y0);
+            Color p01 = get_color(image,x0, y1);
+            Color p10 = get_color(image,x1, y0);
+            Color p11 = get_color(image,x1, y1);
+            float w00 = dx1 * dy1;
+            float w01 = dx1 * dy;
+            float w10 = dx * dy1;
+            float w11 = dx * dy;
+
+            float red = w00 * p00.r + w01 * p01.r + w10 * p10.r + w11 * p11.r;
+            float green = w00 * p00.g + w01 * p01.g + w10 * p10.g + w11 * p11.g;
+            float blue = w00 * p00.b + w01 * p01.b + w10 * p10.b + w11 * p11.b;
+
+            res = (Color){red,green,blue};
+
+            set_color(temp, x_out, y_out, res);
+        }
+    }
+    for(int y = 0; y < h; y++){
+        for(int x = 0; x < w; x++){
+            Color cur_color = get_color(temp, x, y);
+            set_color(image, x, y, cur_color);
+        }
+    }
+}

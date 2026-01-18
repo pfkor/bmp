@@ -66,6 +66,8 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
         replace_tiles(image, curFilter.params.mosaic.tiles_number);
         break;
 
+    case FISH:   fish_eye(image, curFilter.params.fisheye.strength);
+
     default: break;
     }
   }

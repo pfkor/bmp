@@ -113,6 +113,17 @@ int main(int argn, char *args[]){
                 return 1;
             }
         }
+        else if (strcmp(args[i], "-fish") == 0){
+            if(i + 1 < argn){
+                cur_filter.Type = FISH;
+                cur_filter.params.fisheye.strength = atof(args[i + 1]);
+                i++;
+            }
+            else{
+                fprintf(stdout, "Wrong or no args for filter\n");
+                return 1;
+            }
+        }
         else{
             fprintf(stderr, "Unknown filter %s!\n", args[i]);
             continue;
