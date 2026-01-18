@@ -16,7 +16,6 @@ int main(int argn, char *args[]){
         print_help();
         return 1;
     }
-
     char *input_path = args[1];
     char *output_path = args[2];
 
@@ -125,6 +124,8 @@ int main(int argn, char *args[]){
     apply_pipeline(image, pipeline);
     save_bmp(output_path, image);
 
+    fprintf(stdout, "Program finished! %d filters applied", pipeline->count);
+
     destroy_image(image);
     destroy_pipeline(pipeline);
     return 0;
@@ -142,8 +143,8 @@ void print_help(){
     fprintf(stdout, "\t-med {window}                             Reduce noise\n");
     fprintf(stdout, "\t-blur {sigma}                             Make image blurry\n");
     fprintf(stdout, "\t-cluster {centroids}                      Reduce number of colors\n");
-    fprintf(stdout, "\t-mosaic {dataset file} {dataset size}     Create image made of small pictures\n");
     fprintf(stdout, "\t-fish {strength}                          Curving image from center\n");
+    fprintf(stdout, "\t-mosaic {dataset file} {dataset size}     Create image made of small pictures\n");
 }
 
 void arg_error(char* filter_name){

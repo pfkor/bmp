@@ -453,7 +453,6 @@ static Color* select_centroid(Image* image, int k){
     srand(time(NULL));
     unsigned int h = image->height;
     unsigned int w = image->width;
-    int centrs_ready = 1;
     double total = 0;
 
     Color* centroids = malloc(k * sizeof(Color));
@@ -497,10 +496,11 @@ static Color* select_centroid(Image* image, int k){
         for(int y = 0; y < h; y++){
             for(int x = 0; x < w; x++){
                 Color cur_color = get_color(image,x,y);
-                double min_dist = min_distance(cur_color, centroids, centrs_ready);
+                double min_dist = min_distance(cur_color, centroids, i);
                 dists[y][x] = min_dist;
                 total += min_dist;
-                cumulative[y][x] = cur_sum + min_dist;
+                cur_sum += min_dist;
+                cumulative[y][x] = cur_sum;
 
             }
         }
@@ -512,7 +512,6 @@ static Color* select_centroid(Image* image, int k){
                 if(random_num < cumulative[y][x]){
                     centroids[i] = get_color(image, x,y);
                     found = 1;
-                    centrs_ready++;
 
                 }
 
@@ -657,7 +656,7 @@ void create_tiles(char *filepath, int *tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read red %d!\n", i);
                     fclose(input);
-                    free(current);
+                    destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
                     return;
@@ -670,7 +669,7 @@ void create_tiles(char *filepath, int *tiles_number){
                 if (fread(&value, sizeof(uint8_t), 1, input) != 1){
                     fprintf(stderr, "Failed to read green %d!\n", i);
                     fclose(input);
-                    free(current);
+                    destroy_image(current);
                     free(filename);
                     *tiles_number = i-1;
                     return;
@@ -859,4 +858,5 @@ void fish_eye(Image* image, float strength){
             set_color(image, x, y, cur_color);
         }
     }
+    destroy_image(temp);
 }
