@@ -28,6 +28,8 @@ typedef union {
     } cluster;
     struct {
         int tile_size;
+        char *filepath;
+        int tiles_number;
     } mosaic;
     struct {
         char dummy;  // Заглушка для фильтров без параметров
@@ -50,11 +52,13 @@ void gaussian_blur(Image* image, float sigma);
 
 void edge(Image* image, float threshold);
 
-void median(Image* image, int wind_size);
+// void median(Image* image, int wind_size);
 void median_by_channel(Image* image, int wind_size);
 void kmeans_cluster(Image* image, int centr_c);
 
 void negative (Image *image);
 void monochrome (Image *image);
 
+void create_tiles(char *filepath, int tiles_number);
 void average_tiles(Image *image, int tile_width);
+void replace_tiles(Image *image, int tiles_number);

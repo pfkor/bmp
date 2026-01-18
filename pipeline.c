@@ -60,7 +60,11 @@ Image* apply_pipeline(Image* image, FilterPipeline* pipeline){
 
     case CLUSTER: kmeans_cluster(image, curFilter.params.cluster.centroids); break;
 
-    case MOSAIC:  average_tiles(image, curFilter.params.mosaic.tile_size); break;
+    case MOSAIC: 
+        create_tiles(curFilter.params.mosaic.filepath, curFilter.params.mosaic.tiles_number);
+        // average_tiles(image, curFilter.params.mosaic.tile_size);
+        replace_tiles(image, curFilter.params.mosaic.tiles_number);
+        break;
 
     default: break;
     }

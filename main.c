@@ -101,10 +101,12 @@ int main(int argn, char *args[]){
             }
         }
         else if (strcmp(args[i], "-mosaic") == 0){
-            if(i + 1 < argn){
+            if(i + 3 < argn){
                 cur_filter.Type = MOSAIC;
                 cur_filter.params.mosaic.tile_size = atoi(args[i+1]);
-                i++;
+                cur_filter.params.mosaic.filepath = args[i+2];
+                cur_filter.params.mosaic.tiles_number = atoi(args[i+3]);
+                i+=3;
             }
             else{
                 fprintf(stdout, "Wrong or no args for filter\n");
