@@ -387,6 +387,8 @@ void median_by_channel(Image* image, int wind_size){
         FREE_IF_NEEDED(r_vals);
         FREE_IF_NEEDED(g_vals);
         FREE_IF_NEEDED(b_vals);
+        destroy_image(temp);
+        destroy_image(window);
     }
 
     int checkpoint = h/20;
@@ -396,8 +398,8 @@ void median_by_channel(Image* image, int wind_size){
             get_window(window, x, y, image);
 
             unsigned int count = 0;
-            for(int y1 = 0; y < window_side; y++){
-                for(int x1 = 0; x < window_side; x++){
+            for(int y1 = 0; y1 < window_side; y1++){
+                for(int x1 = 0; x1 < window_side; x1++){
                     Color cur_color = get_color(window, x1, y1);
                     r_vals[count] = cur_color.r;
                     g_vals[count] = cur_color.g;
@@ -447,7 +449,7 @@ void median_by_channel(Image* image, int wind_size){
     destroy_image(temp);
 }
 
-static Color* select_centroid(Image* image, Color* centroid, int k){
+static Color* select_centroid(Image* image, int k){
     srand(time(NULL));
     unsigned int h = image->height;
     unsigned int w = image->width;
@@ -460,10 +462,10 @@ static Color* select_centroid(Image* image, Color* centroid, int k){
     for(int i = 0; i < h; i++){
         cumulative[i] = malloc(w * sizeof(double));
     }
-    float** dists = malloc(h * sizeof(int*));
+    float** dists = malloc(h * sizeof(double*));
     char rows_alloced_1 = 1;
     for(int i = 0; i < h; i++){
-        dists[i] = malloc(w * sizeof(int));
+        dists[i] = malloc(w * sizeof(double));
         if(!dists[i]) rows_alloced = 0;
     }
 
@@ -510,6 +512,7 @@ static Color* select_centroid(Image* image, Color* centroid, int k){
                 if(random_num < cumulative[y][x]){
                     centroids[i] = get_color(image, x,y);
                     found = 1;
+                    centrs_ready++;
 
                 }
 
@@ -561,7 +564,7 @@ void kmeans_cluster(Image* image, int centr_c){
 
     }
 
-    centroids = select_centroid(image, centroids, centr_c);
+    centroids = select_centroid(image, centr_c);
 
     for(int n =  0; n < max_iters; n++){
         memset(red_avg, 0, centr_c * sizeof(double));
@@ -590,6 +593,9 @@ void kmeans_cluster(Image* image, int centr_c){
                 if(dist > tolerance){
                     centrs_changed = 1;
                 }
+            }
+            else{
+                new_centroids[i] = centroids[i];
             }
         }
         if(centrs_changed){
@@ -719,25 +725,6 @@ Color get_average(Image *image, unsigned int x_from, unsigned int x_to, unsigned
 }
 
 
-void average_tiles(Image *image, int tile_size){
-    if (!image || !image->data) return;
-
-    unsigned int w = image->width;
-    unsigned int h = image->height;
-
-    for (unsigned int y = 0; y <= h; y += tile_size){
-        for (unsigned int x = 0; x <= w; x += tile_size){
-
-            Color average = get_average(image, x, x+tile_size, y, y+tile_size);
-            for (int ky = 0; ky < tile_size; ky++){
-                for (int kx = 0; kx < tile_size; kx++){
-                    set_color(image, x+kx, y+ky, average);
-                }
-            }
-        }
-    }
-}
-
 void replace_tiles(Image *image, int tiles_number){
     if (!image || !image->data) return;
 
@@ -746,7 +733,7 @@ void replace_tiles(Image *image, int tiles_number){
     char *filepath = malloc(sizeof(char) * 100);
     if (!current){
         fprintf(stderr, "Failed to allocate memory!\n");
-        if (current) free(current);
+        if (current) destroy_image(current);
         if (filepath) free(filepath);
         return;
     }
@@ -803,7 +790,7 @@ void fish_eye(Image* image, float strength){
     float cy = h / 2.0f;
 
     float vec_r_x = w - 1 - cx;
-    float vec_r_y = h - 1 - cx;
+    float vec_r_y = h - 1 - cy;
 
     float min_r = vec_r_y < vec_r_x ? vec_r_y : vec_r_x;
 
