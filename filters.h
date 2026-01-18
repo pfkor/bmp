@@ -27,7 +27,6 @@ typedef union {
         int centroids;
     } cluster;
     struct {
-        int tile_size;
         char *filepath;
         int tiles_number;
     } mosaic;
@@ -59,6 +58,6 @@ void kmeans_cluster(Image* image, int centr_c);
 void negative (Image *image);
 void monochrome (Image *image);
 
-void create_tiles(char *filepath, int tiles_number);
-void average_tiles(Image *image, int tile_width);
+void create_tiles(char *filepath, int* tiles_number);
+// void average_tiles(Image *image, int tile_width);
 void replace_tiles(Image *image, int tiles_number);
